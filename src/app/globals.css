@@ -113,54 +113,14 @@
   50% { transform: translateY(-12px) rotate(var(--rotate, 0deg)); }
 }
 
-@keyframes converge {
-  to {
-    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.3);
-    opacity: 0;
-  }
-}
-
-@keyframes fade-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes draw-line {
-  from { stroke-dashoffset: var(--path-length, 300); }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes grow-bar {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
-}
-
-@keyframes fill-radial {
-  from { stroke-dasharray: 0 999; }
-  to { stroke-dasharray: var(--target-dash, 165) 999; }
-}
-
 @keyframes pulse-bloom {
-  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.04); }
 }
 
 @keyframes pulse-bloom-inner {
   0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
   50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.1); }
-}
-
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* === REDUCED MOTION === */
