@@ -64,37 +64,235 @@
 
 #### 3. 인터랙티브 데모 (풀 구성)
 
-한 화면에 아래 요소를 모두 배치:
+한 화면에 아래 요소를 모두 배치. 모든 컴포넌트는 shadcn/ui 공식 블록/컴포넌트를 사용하며, shadcn 스타일링 규칙(semantic colors, `gap-*` 레이아웃, full Card composition)을 준수한다.
 
 **3-1. 필터 바**
-- 국가 선택 (전체 / 개별 국가)
-- 기간 선택 (월 단위)
-- 매체 선택 (전체 / Meta / Google / TikTok 등)
-- shadcn `Select` 컴포넌트 사용
+
+컴포넌트: `Select` + `SelectTrigger` + `SelectContent` + `SelectItem`
+
+```tsx
+// 패턴: chart-area-interactive의 Select 패턴 기반
+<div className="flex items-center gap-3">
+  <Select value={country} onValueChange={setCountry}>
+    <SelectTrigger className="w-[160px] rounded-lg">
+      <SelectValue placeholder="전체 국가" />
+    </SelectTrigger>
+    <SelectContent className="rounded-xl">
+      <SelectItem value="all" className="rounded-lg">전체 국가</SelectItem>
+      {countries.map(c => (
+        <SelectItem key={c.code} value={c.code} className="rounded-lg">{c.name}</SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+  {/* 동일 패턴으로 기간/매체 Select */}
+</div>
+```
+
+- 필터 상태 변경 시 클라이언트에서 샘플 데이터 필터링
+- 필터 옵션은 `config/countries.ts`, `config/metrics.ts`에서 파라미터화
 
 **3-2. KPI 카드 4개**
-- 총 광고비, 총 결제금액, 평균 ROAS, 총 회원가입
-- 각 카드에 전주 대비 변화율 표시
-- shadcn `Card` 컴포넌트 사용
-- 상승: `hsl(var(--chart-2))` (초록), 하락: `hsl(var(--destructive))`
+
+컴포넌트: `Card` + `CardHeader` + `CardTitle` + `CardContent` + `Badge`
+
+```tsx
+// shadcn Card full composition 준수
+<Card>
+  <CardHeader>
+    <CardDescription>총 광고비</CardDescription>
+    <CardTitle className="text-2xl font-bold">₩2.4억</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <Badge variant="secondary">+12%</Badge>
+  </CardContent>
+</Card>
+```
+
+- KPI 항목 4개: 총 광고비, 총 결제금액, 평균 ROAS, 총 회원가입
+- 변화율: `Badge variant="secondary"` 사용 (raw color 금지)
+- KPI 항목 목록은 `config/dashboard.ts`의 `kpiCards`로 파라미터화
+- 그리드: `className="grid grid-cols-4 gap-4"` (`space-*` 금지)
 
 **3-3. 차트 영역**
-- **메인 차트**: Area Chart (Stacked) — 국가별 ROAS 6개월 추이, 부드러운 곡선(smooth curves), 그라데이션 area fill
-- **보조 차트 (2열)**:
-  - Bar Chart — 매체별 광고비 비교
-  - Radial Chart — 목표 달성률
-- 모든 차트는 shadcn/ui charts 컴포넌트 사용 (Recharts 기반)
-- 차트 컬러: `--chart-1` ~ `--chart-5` CSS 변수 사용
+
+모든 차트는 반드시 `Card` > `CardHeader`/`CardContent` > `ChartContainer` 구조를 따른다.
+모든 차트 데이터 키는 `ChartConfig` 타입으로 레이블/컬러 매핑한다.
+컬러는 반드시 `var(--chart-1)` ~ `var(--chart-5)` CSS 변수를 사용한다.
+
+**메인 차트: Area Chart (Interactive + Gradient)**
+
+기반 블록: `@shadcn/chart-area-interactive` + `@shadcn/chart-area-gradient`
+
+```tsx
+// ChartConfig 정의 — 국가별 매핑
+const chartConfig = {
+  kr: { label: "한국", color: "var(--chart-1)" },
+  jp: { label: "일본", color: "var(--chart-2)" },
+  us: { label: "미국", color: "var(--chart-3)" },
+} satisfies ChartConfig;
+
+// Card 구조
+<Card className="pt-0">
+  <CardHeader className="flex items-center gap-2 border-b py-5 sm:flex-row">
+    <div className="grid flex-1 gap-1">
+      <CardTitle>ROAS 추이</CardTitle>
+      <CardDescription>국가별 ROAS 6개월 트렌드</CardDescription>
+    </div>
+    <Select value={period} onValueChange={setPeriod}>
+      {/* 기간 필터 — chart-area-interactive 패턴 */}
+    </Select>
+  </CardHeader>
+  <CardContent>
+    <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+      <AreaChart data={filteredData}>
+        <defs>
+          {/* 국가별 linearGradient — chart-area-gradient 패턴 */}
+          <linearGradient id="fillKr" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--color-kr)" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="var(--color-kr)" stopOpacity={0.1} />
+          </linearGradient>
+          {/* jp, us도 동일 패턴 */}
+        </defs>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+        <Area dataKey="kr" type="natural" fill="url(#fillKr)" stroke="var(--color-kr)" stackId="a" />
+        <Area dataKey="jp" type="natural" fill="url(#fillJp)" stroke="var(--color-jp)" stackId="a" />
+        <Area dataKey="us" type="natural" fill="url(#fillUs)" stroke="var(--color-us)" stackId="a" />
+        <ChartLegend content={<ChartLegendContent />} />
+      </AreaChart>
+    </ChartContainer>
+  </CardContent>
+</Card>
+```
+
+핵심: `type="natural"` → 부드러운 곡선, `linearGradient` → 그라데이션 area fill
+
+**보조 차트 1: Bar Chart (Interactive)**
+
+기반 블록: `@shadcn/chart-bar-interactive`
+
+```tsx
+// 탭 전환으로 지표(광고비/결제금액) 변경 — chart-bar-interactive 패턴
+<Card className="py-0">
+  <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row">
+    <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3">
+      <CardTitle>매체별 성과</CardTitle>
+      <CardDescription>매체별 광고비 비교</CardDescription>
+    </div>
+    {/* 탭 전환 버튼 (광고비/결제금액) — data-active 패턴 */}
+  </CardHeader>
+  <CardContent>
+    <ChartContainer config={barConfig} className="aspect-auto h-[200px] w-full">
+      <BarChart data={barData}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="medium" tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey={activeMetric} fill={`var(--color-${activeMetric})`} />
+      </BarChart>
+    </ChartContainer>
+  </CardContent>
+</Card>
+```
+
+**보조 차트 2: Radial Chart (Text)**
+
+기반 블록: `@shadcn/chart-radial-text`
+
+```tsx
+// 목표 달성률 — chart-radial-text 패턴
+<Card className="flex flex-col">
+  <CardHeader className="items-center pb-0">
+    <CardTitle>목표 달성률</CardTitle>
+    <CardDescription>이번 달 목표 대비</CardDescription>
+  </CardHeader>
+  <CardContent className="flex-1 pb-0">
+    <ChartContainer config={radialConfig} className="mx-auto aspect-square max-h-[200px]">
+      <RadialBarChart data={radialData} startAngle={0} endAngle={302} innerRadius={80} outerRadius={90}>
+        <PolarGrid gridType="circle" radialLines={false} stroke="none"
+          className="first:fill-muted last:fill-background" polarRadius={[90, 80]} />
+        <RadialBar dataKey="value" background cornerRadius={10} />
+        <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+          <Label content={/* 중앙에 달성률 % 표시 */} />
+        </PolarRadiusAxis>
+      </RadialBarChart>
+    </ChartContainer>
+  </CardContent>
+</Card>
+```
+
+**보조 차트 레이아웃**: `className="grid grid-cols-2 gap-4"` (`space-*` 금지)
 
 **3-4. 상세 테이블**
-- 국가별 핵심 지표 요약 (광고비, 결제금액, ROAS, 가입CPA)
-- shadcn `Table` 컴포넌트 사용
-- 헤더: `muted-foreground`, 데이터: `foreground`
+
+컴포넌트: `Table` + `TableHeader` + `TableRow` + `TableHead` + `TableBody` + `TableCell`
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>상세 데이터</CardTitle>
+    <CardDescription>국가별 핵심 지표 요약</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>국가</TableHead>
+          <TableHead className="text-right">광고비</TableHead>
+          <TableHead className="text-right">결제금액</TableHead>
+          <TableHead className="text-right">ROAS</TableHead>
+          <TableHead className="text-right">가입CPA</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {/* 데이터 행 — config/countries.ts 기반 동적 렌더링 */}
+      </TableBody>
+    </Table>
+  </CardContent>
+</Card>
+```
+
+- 테이블 컬럼은 `config/dashboard.ts`의 `table.columns`로 파라미터화
+- semantic class만 사용 (`text-muted-foreground` 등)
 
 **3-5. AI 인사이트**
-- 규칙 기반 요약 (전주 대비 변화율, 상/하위 국가)
-- AI 추가 인사이트 (LLM 기반 분석)
-- shadcn `Card` 컴포넌트 사용
+
+컴포넌트: `Card` + `CardHeader` + `CardTitle` + `CardDescription` + `CardContent`
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>AI 인사이트</CardTitle>
+    <CardDescription>데이터 기반 자동 분석</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="grid gap-3 text-sm text-muted-foreground">
+      {insights.map(insight => (
+        <p key={insight.id}>{insight.text}</p>
+      ))}
+    </div>
+  </CardContent>
+</Card>
+```
+
+- 규칙 기반 인사이트: 전주/전월 대비 변화율, ROAS 상/하위 국가
+- AI 인사이트: 데모에서는 샘플 텍스트 표시 (추후 LLM 연동)
+
+#### 컴포넌트 설치 목록
+
+```bash
+npx shadcn@latest add card chart select table badge
+```
+
+#### shadcn 스타일링 규칙 체크리스트
+
+- [ ] `space-y-*` / `space-x-*` 사용 금지 → `flex gap-*` 또는 `grid gap-*`
+- [ ] raw color (`bg-blue-500` 등) 금지 → semantic tokens (`bg-primary`, `text-muted-foreground`)
+- [ ] `dark:` 수동 오버라이드 금지 → CSS 변수가 자동 처리
+- [ ] 차트 컬러는 `var(--chart-1)` ~ `var(--chart-5)` CSS 변수만 사용
+- [ ] Card는 full composition (`CardHeader`/`CardTitle`/`CardDescription`/`CardContent`)
+- [ ] 아이콘에 수동 사이징 금지 → `data-icon` 속성 사용
+- [ ] `size-*` 사용 (width=height일 때 `w-* h-*` 대신)
 
 #### 4. 푸터
 
