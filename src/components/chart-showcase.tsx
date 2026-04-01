@@ -104,9 +104,9 @@ export function ChartShowcase() {
   const { ref, isVisible } = useScrollReveal({ threshold: 0.15 });
 
   const cards = [
-    { label: "ROAS TREND", offset: "translate-y-6", chart: <AreaChartSvg isVisible={isVisible} /> },
-    { label: "BY MEDIUM", offset: "-translate-y-4", chart: <BarChartSvg isVisible={isVisible} /> },
-    { label: "GOAL", offset: "translate-y-2", chart: <RadialChartSvg isVisible={isVisible} /> },
+    { label: "ROAS TREND", offset: "translate-y-6", floatDelay: 0, chart: <AreaChartSvg isVisible={isVisible} /> },
+    { label: "BY MEDIUM", offset: "-translate-y-4", floatDelay: 0.8, chart: <BarChartSvg isVisible={isVisible} /> },
+    { label: "GOAL", offset: "translate-y-2", floatDelay: 1.6, chart: <RadialChartSvg isVisible={isVisible} /> },
   ];
 
   return (
@@ -115,13 +115,14 @@ export function ChartShowcase() {
         {cards.map((card, i) => (
           <div
             key={card.label}
-            className={`rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.3)] backdrop-blur-sm ${card.offset}`}
+            className={`rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-sm transition-[box-shadow,border-color] duration-300 hover:border-white/[0.15] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_30px_rgba(100,149,237,0.08)] ${card.offset}`}
             style={{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? undefined : "translateY(60px)",
-              transition: `opacity 0.6s ease-out ${i * 0.2}s, transform 0.6s cubic-bezier(0.23, 1, 0.32, 1) ${i * 0.2}s`,
+              transition: `opacity 0.6s ease-out ${i * 0.2}s, transform 0.6s cubic-bezier(0.23, 1, 0.32, 1) ${i * 0.2}s, box-shadow 0.3s ease, border-color 0.3s ease`,
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
               width: card.label === "GOAL" ? "140px" : "180px",
-              willChange: "transform, opacity",
+              animation: isVisible ? `float 4s ease-in-out ${card.floatDelay}s infinite` : "none",
             }}
           >
             <div className="mb-3 text-[11px] font-medium tracking-widest text-white/40">
