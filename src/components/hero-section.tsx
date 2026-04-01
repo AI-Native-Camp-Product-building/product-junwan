@@ -67,9 +67,10 @@ export function HeroSection() {
               style={{
                 left: `${currentX}%`,
                 top: `${currentY}%`,
-                transform: `translate(-50%, -50%) scale(${scale}) rotate(${frag.rotate}deg)`,
+                translate: "-50% -50%",
+                scale: `${scale}`,
+                rotate: `${frag.rotate}deg`,
                 opacity: Math.max(0, opacity),
-                willChange: "transform, opacity",
               }}
             >
               <div
@@ -77,7 +78,6 @@ export function HeroSection() {
                 style={{
                   animation: "float 3s ease-in-out infinite",
                   animationDelay: `${frag.delay}s`,
-                  ["--rotate" as string]: `${frag.rotate}deg`,
                 }}
               >
                 <span className="text-2xl">{frag.emoji}</span>
