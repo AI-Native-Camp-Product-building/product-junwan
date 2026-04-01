@@ -6,6 +6,16 @@
       "sourceType": "github",
       "computedHash": "645b891da1edbae76ab79c7b088d4e73397464f8396edaf773c0e01971ce75d6"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "frontend-ui-animator": {
+      "source": "julianromli/ai-skills",
+      "sourceType": "github",
+      "computedHash": "b5f6f7af9acfad4020a98b620c0a2d38fd5017cced569b143385ed6afa356759"
+    },
     "gws-sheets": {
       "source": "googleworkspace/cli",
       "sourceType": "github",
@@ -20,6 +30,11 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "computedHash": "ab346ab2aa2fb81f44d2c46b699efa54224e019cb7a506cb7e6978c26da507db"
+    },
+    "web-animation-design": {
+      "source": "connorads/dotfiles",
+      "sourceType": "github",
+      "computedHash": "2a1f00587a8752a2f2072d75f7c7b9d6008bc8a999ceb92a33bfb49006f66f53"
     }
   }
 }

@@ -47,7 +47,7 @@ export function HeroSection() {
   const { hero } = landingContent;
 
   return (
-    <section ref={sectionRef} className="relative h-[200vh]">
+    <section ref={sectionRef} className="relative h-[250vh]">
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         {/* Glass card fragments */}
         {fragments.map((frag, i) => {
@@ -110,8 +110,8 @@ export function HeroSection() {
           }}
         >
           <span
-            className="text-3xl font-bold tracking-tight text-white/90"
-            style={{ textShadow: "0 0 40px rgba(100,149,237,0.35), 0 0 80px rgba(100,149,237,0.12)" }}
+            className="text-5xl font-bold tracking-tight text-white/95 md:text-6xl"
+            style={{ textShadow: "0 0 60px rgba(100,149,237,0.5), 0 0 120px rgba(100,149,237,0.2)" }}
           >
             AdInsight
           </span>

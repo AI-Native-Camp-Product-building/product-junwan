@@ -135,6 +135,17 @@ export function ChartShowcase() {
         ))}
       </div>
 
+      {/* Slogan */}
+      <p
+        className="absolute bottom-16 left-1/2 -translate-x-1/2 text-sm text-white/30 tracking-wide"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transition: "opacity 0.8s ease-out 0.8s",
+        }}
+      >
+        어떻게 정리할지 고민할 필요 없어요
+      </p>
+
       {/* Ambient glow */}
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-[120px] w-[350px] -translate-x-1/2 bg-[radial-gradient(ellipse,rgba(100,149,237,0.06)_0%,transparent_70%)]" />
     </section>

@@ -15,10 +15,10 @@ export function CtaSection() {
     >
       {/* Bloom layer 1 (outer) */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] rounded-full"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(100,149,237,0.1) 0%, transparent 50%)",
-          animation: isVisible ? "pulse-bloom 5s ease-in-out infinite" : "none",
+          background: "radial-gradient(circle, rgba(100,149,237,0.2) 0%, rgba(100,149,237,0.05) 40%, transparent 60%)",
+          animation: isVisible ? "pulse-bloom 4s ease-in-out infinite" : "none",
           opacity: isVisible ? 1 : 0,
           transform: isVisible
             ? "translate(-50%, -50%) scale(1)"
@@ -30,10 +30,10 @@ export function CtaSection() {
 
       {/* Bloom layer 2 (inner) */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[250px] w-[250px] rounded-full"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[350px] w-[350px] rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(130,120,237,0.08) 0%, transparent 60%)",
-          animation: isVisible ? "pulse-bloom-inner 3s ease-in-out infinite" : "none",
+          background: "radial-gradient(circle, rgba(130,120,237,0.18) 0%, rgba(100,149,237,0.05) 50%, transparent 70%)",
+          animation: isVisible ? "pulse-bloom-inner 2.5s ease-in-out infinite" : "none",
           opacity: isVisible ? 1 : 0,
           transform: isVisible
             ? "translate(-50%, -50%) scale(1)"
