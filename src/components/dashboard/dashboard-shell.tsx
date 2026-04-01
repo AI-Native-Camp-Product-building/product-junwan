@@ -1,0 +1,270 @@
+"use client";
+
+import * as React from "react";
+import type {
+  AdRow,
+  DashboardFilters,
+  FilterOptions,
+  KpiSummary,
+  RoasTrendPoint,
+  MediumSpendPoint,
+} from "@/types/dashboard";
+import { IconLink } from "@tabler/icons-react";
+import { FilterBar } from "@/components/dashboard/filter-bar";
+import { KpiCards } from "@/components/dashboard/kpi-cards";
+import { ChartSection } from "@/components/dashboard/chart-section";
+import { DashboardDataTable } from "@/components/dashboard/dashboard-data-table";
+import { Button } from "@/components/ui/button";
+
+interface DashboardShellProps {
+  initialData: AdRow[];
+  filterOptions: FilterOptions;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+/** Compute KPI summary with MoM change. */
+function computeKpiSummary(data: AdRow[]): KpiSummary {
+  const adSpend = data.reduce((s, r) => s + r.adSpend, 0);
+  const revenue = data.reduce((s, r) => s + r.revenue, 0);
+  const signups = data.reduce((s, r) => s + r.signups, 0);
+  const roas = adSpend > 0 ? (revenue / adSpend) * 100 : 0;
+
+  // Group by month to compute MoM
+  const byMonth = new Map<string, AdRow[]>();
+  for (const row of data) {
+    const existing = byMonth.get(row.month) ?? [];
+    existing.push(row);
+    byMonth.set(row.month, existing);
+  }
+  const sortedMonths = [...byMonth.keys()].sort();
+
+  let adSpendChange = 0;
+  let revenueChange = 0;
+  let roasChange = 0;
+  let signupsChange = 0;
+
+  if (sortedMonths.length >= 2) {
+    const curr = byMonth.get(sortedMonths[sortedMonths.length - 1])!;
+    const prev = byMonth.get(sortedMonths[sortedMonths.length - 2])!;
+
+    const currAdSpend = curr.reduce((s, r) => s + r.adSpend, 0);
+    const prevAdSpend = prev.reduce((s, r) => s + r.adSpend, 0);
+    const currRevenue = curr.reduce((s, r) => s + r.revenue, 0);
+    const prevRevenue = prev.reduce((s, r) => s + r.revenue, 0);
+    const currSignups = curr.reduce((s, r) => s + r.signups, 0);
+    const prevSignups = prev.reduce((s, r) => s + r.signups, 0);
+    const currRoas = currAdSpend > 0 ? (currRevenue / currAdSpend) * 100 : 0;
+    const prevRoas = prevAdSpend > 0 ? (prevRevenue / prevAdSpend) * 100 : 0;
+
+    adSpendChange = prevAdSpend > 0 ? ((currAdSpend - prevAdSpend) / prevAdSpend) * 100 : 0;
+    revenueChange = prevRevenue > 0 ? ((currRevenue - prevRevenue) / prevRevenue) * 100 : 0;
+    signupsChange = prevSignups > 0 ? ((currSignups - prevSignups) / prevSignups) * 100 : 0;
+    roasChange = currRoas - prevRoas; // pp change
+  }
+
+  return { adSpend, revenue, roas, signups, adSpendChange, revenueChange, roasChange, signupsChange };
+}
+
+/** Build ROAS trend data grouped by month (optionally per-country). */
+function computeRoasTrend(data: AdRow[]): RoasTrendPoint[] {
+  const map = new Map<string, Map<string, { spend: number; revenue: number }>>();
+
+  for (const row of data) {
+    if (!map.has(row.month)) map.set(row.month, new Map());
+    const countryMap = map.get(row.month)!;
+    const existing = countryMap.get(row.country) ?? { spend: 0, revenue: 0 };
+    existing.spend += row.adSpend;
+    existing.revenue += row.revenue;
+    countryMap.set(row.country, existing);
+  }
+
+  const result: RoasTrendPoint[] = [];
+  for (const [month, countryMap] of [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const point: RoasTrendPoint = { month };
+    let totalSpend = 0;
+    let totalRevenue = 0;
+    for (const [country, { spend, revenue }] of countryMap) {
+      point[country] = spend > 0 ? Math.round((revenue / spend) * 100 * 10) / 10 : 0;
+      totalSpend += spend;
+      totalRevenue += revenue;
+    }
+    point["전체"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
+    result.push(point);
+  }
+  return result;
+}
+
+/** Build medium spend data aggregated across all filtered rows. */
+function computeMediumSpend(data: AdRow[]): MediumSpendPoint[] {
+  const map = new Map<string, { adSpend: number; revenue: number }>();
+  for (const row of data) {
+    const existing = map.get(row.medium) ?? { adSpend: 0, revenue: 0 };
+    existing.adSpend += row.adSpend;
+    existing.revenue += row.revenue;
+    map.set(row.medium, existing);
+  }
+
+  return [...map.entries()]
+    .map(([medium, { adSpend, revenue }]) => ({
+      medium,
+      adSpend,
+      revenue,
+      roas: adSpend > 0 ? Math.round((revenue / adSpend) * 100 * 10) / 10 : 0,
+    }))
+    .sort((a, b) => b.adSpend - a.adSpend);
+}
+
+function filterData(data: AdRow[], filters: DashboardFilters): AdRow[] {
+  return data.filter((row) => {
+    if (filters.countries.length > 0 && !filters.countries.includes(row.country)) return false;
+    if (filters.months.length > 0 && !filters.months.includes(row.month)) return false;
+    if (filters.mediums.length > 0 && !filters.mediums.includes(row.medium)) return false;
+    if (filters.goals.length > 0 && !filters.goals.includes(row.goal)) return false;
+    return true;
+  });
+}
+
+/** Read filters from URL search params on initial load. */
+function readFiltersFromUrl(options: FilterOptions): DashboardFilters {
+  if (typeof window === "undefined") {
+    return { countries: [], months: [], mediums: [], goals: [] };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const parse = (key: string, valid: string[]) => {
+    const raw = params.get(key);
+    if (!raw) return [];
+    return raw.split(",").filter((v) => valid.includes(v));
+  };
+  return {
+    countries: parse("countries", options.countries),
+    months: parse("months", options.months),
+    mediums: parse("mediums", options.mediums),
+    goals: parse("goals", options.goals),
+  };
+}
+
+/** Sync current filters to URL without triggering navigation. */
+function syncFiltersToUrl(filters: DashboardFilters) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams();
+  if (filters.countries.length > 0) params.set("countries", filters.countries.join(","));
+  if (filters.months.length > 0) params.set("months", filters.months.join(","));
+  if (filters.mediums.length > 0) params.set("mediums", filters.mediums.join(","));
+  if (filters.goals.length > 0) params.set("goals", filters.goals.join(","));
+  const qs = params.toString();
+  const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+  window.history.replaceState(null, "", url);
+}
+
+export function DashboardShell({ initialData, filterOptions }: DashboardShellProps) {
+  const [filters, setFilters] = React.useState<DashboardFilters>(() =>
+    readFiltersFromUrl(filterOptions)
+  );
+  const [data, setData] = React.useState<AdRow[]>(initialData);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [linkCopied, setLinkCopied] = React.useState(false);
+
+  // Sync filters to URL on change
+  React.useEffect(() => {
+    syncFiltersToUrl(filters);
+  }, [filters]);
+
+  const debouncedFilters = useDebounce(filters, 300);
+
+  // Fetch data when filters change
+  React.useEffect(() => {
+    // Skip fetch if no initial data and no filters (first render)
+    const hasFilters =
+      debouncedFilters.countries.length > 0 ||
+      debouncedFilters.months.length > 0 ||
+      debouncedFilters.mediums.length > 0 ||
+      debouncedFilters.goals.length > 0;
+
+    if (!hasFilters && initialData.length > 0) {
+      setData(initialData);
+      return;
+    }
+
+    setIsLoading(true);
+    const params = new URLSearchParams();
+    if (debouncedFilters.countries.length > 0) params.set("countries", debouncedFilters.countries.join(","));
+    if (debouncedFilters.months.length > 0) params.set("months", debouncedFilters.months.join(","));
+    if (debouncedFilters.mediums.length > 0) params.set("mediums", debouncedFilters.mediums.join(","));
+    if (debouncedFilters.goals.length > 0) params.set("goals", debouncedFilters.goals.join(","));
+
+    fetch(`/api/dashboard?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => setData(json.data ?? []))
+      .catch(() => setData(initialData))
+      .finally(() => setIsLoading(false));
+  }, [debouncedFilters, initialData]);
+
+  const kpiSummary = React.useMemo(() => computeKpiSummary(data), [data]);
+  const roasTrendData = React.useMemo(() => computeRoasTrend(data), [data]);
+  const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
+
+  const activeCountries = React.useMemo(() => {
+    const set = new Set(data.map((r) => r.country));
+    return [...set].sort();
+  }, [data]);
+
+  const handleCopyLink = React.useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback for non-secure contexts
+      const textarea = document.createElement("textarea");
+      textarea.value = window.location.href;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="flex-1">
+          <FilterBar
+            filters={filters}
+            onFiltersChange={setFilters}
+            options={filterOptions}
+          />
+        </div>
+        <div className="px-4 lg:px-6 md:pt-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="shrink-0 gap-1.5 bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06]"
+            aria-label="현재 필터 링크 복사"
+          >
+            <IconLink className="size-3.5" />
+            {linkCopied ? "복사됨!" : "링크 복사"}
+          </Button>
+        </div>
+      </div>
+      <KpiCards summary={kpiSummary} isLoading={isLoading} />
+      <ChartSection
+        roasTrendData={roasTrendData}
+        mediumSpendData={mediumSpendData}
+        countries={activeCountries}
+        isLoading={isLoading}
+      />
+      <DashboardDataTable data={data} isLoading={isLoading} />
+    </div>
+  );
+}
