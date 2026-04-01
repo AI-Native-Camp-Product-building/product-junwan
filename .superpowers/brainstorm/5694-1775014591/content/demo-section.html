@@ -1,0 +1,192 @@
+<h2>인터랙티브 데모 영역</h2>
+<p class="subtitle">히어로 아래 핵심 영역 — 샘플 데이터로 대시보드를 미리 체험</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">데모 A: 필터 + 차트 + 테이블 + 인사이트</div>
+        <div class="mockup-body" style="font-size:11px;line-height:1.5;padding:12px;">
+          <!-- 필터 바 -->
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+            <div style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;">전체 국가 ▾</div>
+            <div style="background:#e5e7eb;padding:4px 10px;border-radius:20px;font-size:10px;">2026년 3월 ▾</div>
+            <div style="background:#e5e7eb;padding:4px 10px;border-radius:20px;font-size:10px;">전체 매체 ▾</div>
+            <div style="background:#e5e7eb;padding:4px 10px;border-radius:20px;font-size:10px;">ROAS ▾</div>
+          </div>
+
+          <!-- KPI 카드 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">총 광고비</div>
+              <div style="font-size:14px;font-weight:bold;">₩2.4억</div>
+              <div style="font-size:9px;color:#ef4444;">▲ 12%</div>
+            </div>
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">총 결제금액</div>
+              <div style="font-size:14px;font-weight:bold;">₩8.1억</div>
+              <div style="font-size:9px;color:#22c55e;">▲ 23%</div>
+            </div>
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">평균 ROAS</div>
+              <div style="font-size:14px;font-weight:bold;">337%</div>
+              <div style="font-size:9px;color:#22c55e;">▲ 8%</div>
+            </div>
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">총 회원가입</div>
+              <div style="font-size:14px;font-weight:bold;">12,847</div>
+              <div style="font-size:9px;color:#22c55e;">▲ 15%</div>
+            </div>
+          </div>
+
+          <!-- 차트 영역 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:bold;margin-bottom:8px;">국가별 ROAS 추이</div>
+            <div style="display:flex;align-items:end;gap:4px;height:60px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:45px;"></div>
+                <span style="font-size:8px;">KR</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="width:100%;background:#60a5fa;border-radius:3px 3px 0 0;height:38px;"></div>
+                <span style="font-size:8px;">JP</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="width:100%;background:#93c5fd;border-radius:3px 3px 0 0;height:52px;"></div>
+                <span style="font-size:8px;">US</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="width:100%;background:#bfdbfe;border-radius:3px 3px 0 0;height:30px;"></div>
+                <span style="font-size:8px;">TW</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="width:100%;background:#dbeafe;border-radius:3px 3px 0 0;height:25px;"></div>
+                <span style="font-size:8px;">TH</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 테이블 미리보기 -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:10px;overflow:hidden;">
+            <div style="font-size:11px;font-weight:bold;margin-bottom:6px;">상세 데이터</div>
+            <table style="width:100%;font-size:9px;border-collapse:collapse;">
+              <tr style="background:#f1f5f9;">
+                <th style="padding:3px 4px;text-align:left;">국가</th>
+                <th style="padding:3px 4px;text-align:right;">광고비</th>
+                <th style="padding:3px 4px;text-align:right;">결제금액</th>
+                <th style="padding:3px 4px;text-align:right;">ROAS</th>
+                <th style="padding:3px 4px;text-align:right;">가입CPA</th>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:3px 4px;">🇰🇷 KR</td>
+                <td style="padding:3px 4px;text-align:right;">₩82M</td>
+                <td style="padding:3px 4px;text-align:right;">₩310M</td>
+                <td style="padding:3px 4px;text-align:right;color:#22c55e;font-weight:bold;">378%</td>
+                <td style="padding:3px 4px;text-align:right;">₩4,200</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:3px 4px;">🇯🇵 JP</td>
+                <td style="padding:3px 4px;text-align:right;">¥5.2M</td>
+                <td style="padding:3px 4px;text-align:right;">¥18M</td>
+                <td style="padding:3px 4px;text-align:right;color:#22c55e;font-weight:bold;">346%</td>
+                <td style="padding:3px 4px;text-align:right;">¥620</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 4px;">🇺🇸 US</td>
+                <td style="padding:3px 4px;text-align:right;">$58K</td>
+                <td style="padding:3px 4px;text-align:right;">$241K</td>
+                <td style="padding:3px 4px;text-align:right;color:#22c55e;font-weight:bold;">415%</td>
+                <td style="padding:3px 4px;text-align:right;">$3.8</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- AI 인사이트 -->
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;">
+            <div style="font-size:11px;font-weight:bold;margin-bottom:4px;">💡 AI 인사이트</div>
+            <div style="font-size:10px;color:#166534;line-height:1.5;">
+              • US 지역 ROAS 415%로 전체 1위 — 신규 소재 'A작품' 영향<br>
+              • KR 가입CPA ₩4,200 → 전주 대비 18% 개선<br>
+              • TH 지역 광고비 대비 성과 하락세, 매체 전략 점검 필요
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 풀 구성: 필터 + KPI + 차트 + 테이블 + 인사이트</h3>
+      <p>모든 요소를 한 화면에 배치. 필터로 국가/기간/매체 전환, KPI 카드로 핵심 수치, 차트로 비교, 테이블로 상세, AI 인사이트로 요약.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">데모 B: 탭 전환형 (차트 / 테이블 / 인사이트)</div>
+        <div class="mockup-body" style="font-size:11px;line-height:1.5;padding:12px;">
+          <!-- 필터 바 -->
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <div style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;">전체 국가 ▾</div>
+            <div style="background:#e5e7eb;padding:4px 10px;border-radius:20px;font-size:10px;">2026년 3월 ▾</div>
+            <div style="background:#e5e7eb;padding:4px 10px;border-radius:20px;font-size:10px;">전체 매체 ▾</div>
+          </div>
+
+          <!-- 탭 -->
+          <div style="display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:10px;">
+            <div style="padding:6px 14px;font-size:11px;font-weight:bold;border-bottom:2px solid #3b82f6;color:#3b82f6;margin-bottom:-2px;">📊 차트</div>
+            <div style="padding:6px 14px;font-size:11px;color:#999;">📋 테이블</div>
+            <div style="padding:6px 14px;font-size:11px;color:#999;">💡 인사이트</div>
+          </div>
+
+          <!-- KPI 요약 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:10px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">총 광고비</div>
+              <div style="font-size:16px;font-weight:bold;">₩2.4억</div>
+            </div>
+            <div style="background:#f8faff;border:1px solid #e5e7eb;padding:10px;border-radius:6px;text-align:center;">
+              <div style="font-size:9px;color:#666;">평균 ROAS</div>
+              <div style="font-size:16px;font-weight:bold;">337%</div>
+            </div>
+          </div>
+
+          <!-- 차트 (활성 탭) -->
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
+            <div style="font-size:11px;font-weight:bold;margin-bottom:8px;">국가별 ROAS 비교</div>
+            <div style="display:flex;align-items:end;gap:6px;height:80px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:8px;color:#666;">378%</div>
+                <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:55px;"></div>
+                <span style="font-size:9px;">KR</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:8px;color:#666;">346%</div>
+                <div style="width:100%;background:#60a5fa;border-radius:3px 3px 0 0;height:47px;"></div>
+                <span style="font-size:9px;">JP</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:8px;color:#666;">415%</div>
+                <div style="width:100%;background:#22c55e;border-radius:3px 3px 0 0;height:70px;"></div>
+                <span style="font-size:9px;">US</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:8px;color:#666;">280%</div>
+                <div style="width:100%;background:#bfdbfe;border-radius:3px 3px 0 0;height:38px;"></div>
+                <span style="font-size:9px;">TW</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <div style="font-size:8px;color:#666;">195%</div>
+                <div style="width:100%;background:#fbbf24;border-radius:3px 3px 0 0;height:26px;"></div>
+                <span style="font-size:9px;">TH</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 탭 전환: 차트 / 테이블 / 인사이트 분리</h3>
+      <p>화면이 깔끔하고 각 뷰에 집중 가능. 탭 전환으로 차트↔테이블↔인사이트를 오가며 확인.</p>
+    </div>
+  </div>
+</div>

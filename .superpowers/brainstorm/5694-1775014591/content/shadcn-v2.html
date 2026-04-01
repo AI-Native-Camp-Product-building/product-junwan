@@ -1,0 +1,191 @@
+<h2>최종 디자인 — shadcn Dashboard 스타일</h2>
+<p class="subtitle">Pretendard 폰트 · 유연한 곡선 차트 · 오묘한 그라데이션 · 파라미터화 설계</p>
+
+<div class="mockup" style="max-width:620px;margin:0 auto;">
+  <div class="mockup-header">AdInsight — Final Design Direction</div>
+  <div class="mockup-body" style="padding:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#09090b;color:#fafafa;">
+
+    <!-- Nav -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:13px;font-weight:600;letter-spacing:-0.3px;">AdInsight</div>
+      <div style="display:flex;gap:16px;align-items:center;font-size:11px;color:#71717a;">
+        <span>기능</span>
+        <span>데모</span>
+        <span style="background:#fafafa;color:#09090b;padding:5px 14px;border-radius:6px;font-size:10px;font-weight:500;">시작하기</span>
+      </div>
+    </div>
+
+    <!-- Hero with subtle gradient -->
+    <div style="padding:44px 24px 28px;text-align:center;background:radial-gradient(ellipse at 50% 0%, rgba(120,119,198,0.12) 0%, transparent 60%);">
+      <div style="font-size:10px;color:#71717a;letter-spacing:1.5px;margin-bottom:14px;font-weight:500;">INTERNAL TOOL</div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;line-height:1.35;margin-bottom:10px;">
+        10개국 마케팅 성과,<br>한눈에 확인하세요
+      </div>
+      <div style="font-size:12px;color:#71717a;margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto;line-height:1.6;">
+        국가별 산발된 광고 데이터를 자동 취합하고,<br>시각화하고, AI 인사이트까지
+      </div>
+      <div style="display:inline-block;background:#fafafa;color:#09090b;padding:9px 22px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">
+        대시보드 바로가기 →
+      </div>
+      <div style="display:flex;justify-content:center;gap:40px;margin-top:36px;">
+        <div style="text-align:center;">
+          <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;">10</div>
+          <div style="font-size:10px;color:#52525b;margin-top:2px;">국가</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;">16</div>
+          <div style="font-size:10px;color:#52525b;margin-top:2px;">지표 항목</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:24px;font-weight:700;letter-spacing:-0.5px;">AI</div>
+          <div style="font-size:10px;color:#52525b;margin-top:2px;">인사이트</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Section -->
+    <div style="padding:8px 16px 24px;">
+
+      <!-- Section label -->
+      <div style="font-size:11px;color:#71717a;font-weight:500;margin-bottom:10px;padding-left:2px;">라이브 데모</div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <div style="background:rgba(255,255,255,0.05);padding:6px 12px;border-radius:6px;font-size:10px;color:#fafafa;border:1px solid rgba(255,255,255,0.08);">전체 국가 ▾</div>
+        <div style="background:rgba(255,255,255,0.05);padding:6px 12px;border-radius:6px;font-size:10px;color:#71717a;border:1px solid rgba(255,255,255,0.08);">2026.03 ▾</div>
+        <div style="background:rgba(255,255,255,0.05);padding:6px 12px;border-radius:6px;font-size:10px;color:#71717a;border:1px solid rgba(255,255,255,0.08);">전체 매체 ▾</div>
+      </div>
+
+      <!-- KPI Cards with gradient accent -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a78bfa,#818cf8);border-radius:10px 10px 0 0;"></div>
+          <div style="font-size:9px;color:#71717a;margin-bottom:6px;font-weight:500;">총 광고비</div>
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;">₩2.4억</div>
+          <div style="font-size:9px;color:#4ade80;margin-top:4px;font-weight:500;">+12%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#818cf8,#6366f1);border-radius:10px 10px 0 0;"></div>
+          <div style="font-size:9px;color:#71717a;margin-bottom:6px;font-weight:500;">총 결제금액</div>
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;">₩8.1억</div>
+          <div style="font-size:9px;color:#4ade80;margin-top:4px;font-weight:500;">+23%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:10px 10px 0 0;"></div>
+          <div style="font-size:9px;color:#71717a;margin-bottom:6px;font-weight:500;">평균 ROAS</div>
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;">337%</div>
+          <div style="font-size:9px;color:#4ade80;margin-top:4px;font-weight:500;">+8%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#8b5cf6,#a78bfa);border-radius:10px 10px 0 0;"></div>
+          <div style="font-size:9px;color:#71717a;margin-bottom:6px;font-weight:500;">총 회원가입</div>
+          <div style="font-size:16px;font-weight:700;letter-spacing:-0.3px;">12,847</div>
+          <div style="font-size:9px;color:#4ade80;margin-top:4px;font-weight:500;">+15%</div>
+        </div>
+      </div>
+
+      <!-- Chart with smooth curves (SVG) -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:600;">ROAS 추이</div>
+          <div style="font-size:9px;color:#71717a;">최근 6개월</div>
+        </div>
+        <svg viewBox="0 0 400 100" style="width:100%;height:auto;">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#818cf8" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#818cf8" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="0" y1="25" x2="400" y2="25" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+          <line x1="0" y1="50" x2="400" y2="50" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+          <line x1="0" y1="75" x2="400" y2="75" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+          <!-- KR area fill -->
+          <path d="M0,65 C67,58 133,45 200,40 C267,35 333,20 400,15 L400,100 L0,100 Z" fill="url(#g1)"/>
+          <!-- JP area fill -->
+          <path d="M0,72 C67,68 133,60 200,55 C267,50 333,42 400,38 L400,100 L0,100 Z" fill="url(#g2)"/>
+          <!-- KR line -->
+          <path d="M0,65 C67,58 133,45 200,40 C267,35 333,20 400,15" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+          <!-- JP line -->
+          <path d="M0,72 C67,68 133,60 200,55 C267,50 333,42 400,38" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4,3"/>
+          <!-- US line -->
+          <path d="M0,55 C67,60 133,50 200,35 C267,25 333,18 400,10" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Dots -->
+          <circle cx="400" cy="15" r="3" fill="#818cf8"/>
+          <circle cx="400" cy="38" r="3" fill="#a78bfa"/>
+          <circle cx="400" cy="10" r="3" fill="#6366f1"/>
+          <!-- Labels -->
+          <text x="385" y="12" font-size="7" fill="#818cf8" text-anchor="end">KR</text>
+          <text x="385" y="35" font-size="7" fill="#a78bfa" text-anchor="end">JP</text>
+          <text x="385" y="7" font-size="7" fill="#6366f1" text-anchor="end">US</text>
+          <!-- X axis -->
+          <text x="0" y="97" font-size="7" fill="#52525b">10월</text>
+          <text x="80" y="97" font-size="7" fill="#52525b">11월</text>
+          <text x="160" y="97" font-size="7" fill="#52525b">12월</text>
+          <text x="240" y="97" font-size="7" fill="#52525b">1월</text>
+          <text x="320" y="97" font-size="7" fill="#52525b">2월</text>
+          <text x="388" y="97" font-size="7" fill="#52525b">3월</text>
+        </svg>
+      </div>
+
+      <!-- Table -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-bottom:14px;">
+        <table style="width:100%;font-size:10px;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+              <th style="padding:10px 12px;text-align:left;font-weight:500;color:#71717a;font-size:9px;">국가</th>
+              <th style="padding:10px 12px;text-align:right;font-weight:500;color:#71717a;font-size:9px;">광고비</th>
+              <th style="padding:10px 12px;text-align:right;font-weight:500;color:#71717a;font-size:9px;">결제금액</th>
+              <th style="padding:10px 12px;text-align:right;font-weight:500;color:#71717a;font-size:9px;">ROAS</th>
+              <th style="padding:10px 12px;text-align:right;font-weight:500;color:#71717a;font-size:9px;">가입CPA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+              <td style="padding:10px 12px;font-weight:500;">KR</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">₩82M</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">₩310M</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:600;">378%</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">₩4,200</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+              <td style="padding:10px 12px;font-weight:500;">JP</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">¥5.2M</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">¥18M</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:600;">346%</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">¥620</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 12px;font-weight:500;">US</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">$58K</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">$241K</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:600;">415%</td>
+              <td style="padding:10px 12px;text-align:right;color:#a1a1aa;">$3.8</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- AI Insight -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,#818cf8,#a78bfa,#6366f1);border-radius:10px 0 0 10px;"></div>
+        <div style="font-size:11px;font-weight:600;margin-bottom:8px;padding-left:8px;">AI 인사이트</div>
+        <div style="font-size:10px;color:#a1a1aa;line-height:1.8;padding-left:8px;">
+          • US 지역 ROAS 415%로 전체 1위 — 신규 소재 영향<br>
+          • KR 가입CPA ₩4,200 → 전주 대비 18% 개선<br>
+          • TH 지역 성과 하락세, 매체 전략 점검 필요
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:20px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);font-size:10px;color:#3f3f46;">
+      이 웹사이트는 데모버전입니다. 외부에 공유하지 말아주세요.
+    </div>
+  </div>
+</div>

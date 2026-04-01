@@ -1,0 +1,106 @@
+<h2>랜딩 페이지 레이아웃</h2>
+<p class="subtitle">인터랙티브 데모가 포함된 원페이지 구성 — 어떤 레이아웃이 좋은가요?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Layout A: 히어로 + 라이브 데모</div>
+        <div class="mockup-body" style="font-size:12px; line-height:1.6;">
+          <div class="mock-nav" style="margin-bottom:8px;">📊 AdInsight | 기능소개 | 데모 | 시작하기</div>
+          <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:20px;border-radius:8px;margin-bottom:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:bold;margin-bottom:6px;">10개국 마케팅 성과,<br>한눈에 확인하세요</div>
+            <div style="font-size:11px;opacity:0.8;">국가별 산발된 데이터를 자동 취합 → 시각화 → 인사이트</div>
+            <button class="mock-button" style="margin-top:10px;">대시보드 바로가기 →</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div style="background:#f0f4ff;padding:10px;border-radius:6px;text-align:center;">
+              <div style="font-size:18px;font-weight:bold;color:#3b82f6;">10</div>
+              <div style="font-size:10px;color:#666;">국가</div>
+            </div>
+            <div style="background:#f0fdf4;padding:10px;border-radius:6px;text-align:center;">
+              <div style="font-size:18px;font-weight:bold;color:#22c55e;">16</div>
+              <div style="font-size:10px;color:#666;">지표 항목</div>
+            </div>
+            <div style="background:#fef3c7;padding:10px;border-radius:6px;text-align:center;">
+              <div style="font-size:18px;font-weight:bold;color:#f59e0b;">AI</div>
+              <div style="font-size:10px;color:#666;">인사이트</div>
+            </div>
+          </div>
+          <div style="border:2px dashed #3b82f6;border-radius:8px;padding:15px;text-align:center;background:#f8faff;">
+            <div style="font-size:13px;font-weight:bold;margin-bottom:6px;">📈 라이브 데모 영역</div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
+              <span style="background:#e0e7ff;padding:2px 8px;border-radius:4px;font-size:10px;">KR</span>
+              <span style="background:#e0e7ff;padding:2px 8px;border-radius:4px;font-size:10px;">JP</span>
+              <span style="background:#e0e7ff;padding:2px 8px;border-radius:4px;font-size:10px;">US</span>
+            </div>
+            <div style="height:60px;background:linear-gradient(to right,#dbeafe,#bfdbfe,#93c5fd,#60a5fa);border-radius:4px;"></div>
+            <div style="font-size:10px;color:#666;margin-top:4px;">샘플 데이터로 ROAS 트렌드 확인</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 히어로 → 핵심 수치 → 라이브 데모</h3>
+      <p>상단에 임팩트 있는 소개, 바로 아래 인터랙티브 차트 데모. 스크롤 없이 핵심을 전달.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Layout B: 기능 스텝 → 풀 대시보드 데모</div>
+        <div class="mockup-body" style="font-size:12px; line-height:1.6;">
+          <div class="mock-nav" style="margin-bottom:8px;">📊 AdInsight | How it works | Demo | Get Started</div>
+          <div style="background:#f8faff;padding:15px;border-radius:8px;margin-bottom:10px;text-align:center;">
+            <div style="font-size:16px;font-weight:bold;margin-bottom:4px;">광고 성과 데이터, 더 쉽게</div>
+            <div style="font-size:11px;color:#666;">국가별 시트 → 자동 취합 → 시각화 → 인사이트</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <div style="flex:1;background:#fff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:16px;">1️⃣</div>
+              <div style="font-size:11px;font-weight:bold;">데이터 취합</div>
+              <div style="font-size:9px;color:#666;">10개국 시트 자동 연동</div>
+            </div>
+            <div style="flex:1;background:#fff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:16px;">2️⃣</div>
+              <div style="font-size:11px;font-weight:bold;">시각화</div>
+              <div style="font-size:9px;color:#666;">그래프로 한눈에</div>
+            </div>
+            <div style="flex:1;background:#fff;border:1px solid #e5e7eb;padding:8px;border-radius:6px;text-align:center;">
+              <div style="font-size:16px;">3️⃣</div>
+              <div style="font-size:11px;font-weight:bold;">인사이트</div>
+              <div style="font-size:9px;color:#666;">AI + 규칙 기반 요약</div>
+            </div>
+          </div>
+          <div style="border:2px solid #3b82f6;border-radius:8px;overflow:hidden;">
+            <div style="background:#1e293b;color:#fff;padding:6px 10px;font-size:11px;">
+              📊 대시보드 미리보기 — 샘플 데이터
+            </div>
+            <div style="padding:10px;background:#fff;">
+              <div style="display:flex;gap:6px;margin-bottom:6px;">
+                <select style="font-size:10px;padding:2px;border-radius:4px;border:1px solid #ddd;">
+                  <option>전체 국가</option>
+                </select>
+                <select style="font-size:10px;padding:2px;border-radius:4px;border:1px solid #ddd;">
+                  <option>2026년 3월</option>
+                </select>
+                <select style="font-size:10px;padding:2px;border-radius:4px;border:1px solid #ddd;">
+                  <option>매체별</option>
+                </select>
+              </div>
+              <div style="height:70px;background:linear-gradient(to right,#dbeafe,#bfdbfe,#93c5fd);border-radius:4px;margin-bottom:6px;"></div>
+              <div style="font-size:9px;color:#666;background:#f0fdf4;padding:4px 8px;border-radius:4px;">
+                💡 KR 지역 ROAS가 전주 대비 23% 상승 — Meta 매체 성과 호조
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 3스텝 소개 → 풀 대시보드 데모</h3>
+      <p>작동 원리를 스텝별로 설명 후, 필터/차트가 작동하는 풀 대시보드 데모 제공. 설득력 있고 체계적.</p>
+    </div>
+  </div>
+</div>
