@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { buttonVariants } from "@/components/ui/button";
 import { landingContent } from "@/config/content";
 
 export function Hero() {
@@ -8,7 +10,7 @@ export function Hero() {
       <span className="text-xs text-muted-foreground tracking-widest font-medium mb-4">{hero.label}</span>
       <h1 className="text-3xl font-bold tracking-tight leading-tight mb-3 whitespace-pre-line">{hero.headline}</h1>
       <p className="text-sm text-muted-foreground max-w-sm leading-relaxed mb-8">{hero.subheadline}</p>
-      <Button asChild><a href={hero.ctaUrl}>{hero.ctaText}</a></Button>
+      <a href={hero.ctaUrl} className={buttonVariants()}>{hero.ctaText}</a>
       <div className="flex items-center gap-10 mt-10">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center">
