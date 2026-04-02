@@ -11,6 +11,8 @@ export default function ExplorerPage() {
     months: [],
     mediums: [],
     goals: [],
+    dateMode: "monthly",
+    dateRange: null,
   });
   const [filterOptions, setFilterOptions] = React.useState<FilterOptions>({
     countries: [],

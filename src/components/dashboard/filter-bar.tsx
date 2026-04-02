@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 
 interface FilterBarProps {
   filters: DashboardFilters;
@@ -131,7 +132,14 @@ function MultiSelectFilter({
 function buildFilterSummary(filters: DashboardFilters): string {
   const parts: string[] = [];
   if (filters.countries.length > 0) parts.push(filters.countries.join(", "));
-  if (filters.months.length > 0) {
+  if (filters.dateRange) {
+    const { startDate, endDate } = filters.dateRange;
+    if (startDate === endDate) {
+      parts.push(startDate);
+    } else {
+      parts.push(`${startDate} ~ ${endDate}`);
+    }
+  } else if (filters.months.length > 0) {
     const sorted = [...filters.months].sort();
     if (sorted.length === 1) {
       parts.push(sorted[0]);
@@ -149,7 +157,8 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
     filters.countries.length > 0 ||
     filters.months.length > 0 ||
     filters.mediums.length > 0 ||
-    filters.goals.length > 0;
+    filters.goals.length > 0 ||
+    filters.dateRange !== null;
 
   const filterSummary = buildFilterSummary(filters);
 
@@ -159,67 +168,68 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
       months: [],
       mediums: [],
       goals: [],
+      dateMode: "monthly",
+      dateRange: null,
     });
   };
 
   return (
-    <div className="flex flex-col gap-2 px-4 lg:px-6">
-    <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-      <MultiSelectFilter
-        label="국가"
-        ariaLabel="국가 선택"
-        options={options.countries}
-        selected={filters.countries}
-        onSelectionChange={(countries) =>
-          onFiltersChange({ ...filters, countries })
-        }
-        width="w-full md:w-[180px]"
+    <div className="flex flex-col gap-3 px-4 lg:px-6">
+      {/* Date range picker — spans full width on mobile */}
+      <DateRangePicker
+        mode={filters.dateMode ?? "monthly"}
+        onModeChange={(dateMode) => onFiltersChange({ ...filters, dateMode })}
+        value={filters.dateRange ?? null}
+        onChange={(dateRange) => onFiltersChange({ ...filters, dateRange })}
       />
-      <MultiSelectFilter
-        label="월"
-        ariaLabel="월 선택"
-        options={options.months}
-        selected={filters.months}
-        onSelectionChange={(months) =>
-          onFiltersChange({ ...filters, months })
-        }
-        width="w-full md:w-[200px]"
-      />
-      <MultiSelectFilter
-        label="매체"
-        ariaLabel="매체 선택"
-        options={options.mediums}
-        selected={filters.mediums}
-        onSelectionChange={(mediums) =>
-          onFiltersChange({ ...filters, mediums })
-        }
-        width="w-full md:w-[160px]"
-      />
-      <MultiSelectFilter
-        label="목표"
-        ariaLabel="목표 선택"
-        options={options.goals}
-        selected={filters.goals}
-        onSelectionChange={(goals) =>
-          onFiltersChange({ ...filters, goals })
-        }
-        width="w-full md:w-[140px]"
-      />
-      {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetFilters}
-          className="text-muted-foreground hover:text-foreground md:ml-auto"
-        >
-          <IconX className="size-3.5" />
-          초기화
-        </Button>
-      )}
-    </div>
-    <p className="text-xs text-muted-foreground/70 truncate" aria-live="polite">
-      {filterSummary}
-    </p>
+
+      {/* Other filters row */}
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+        <MultiSelectFilter
+          label="국가"
+          ariaLabel="국가 선택"
+          options={options.countries}
+          selected={filters.countries}
+          onSelectionChange={(countries) =>
+            onFiltersChange({ ...filters, countries })
+          }
+          width="w-full md:w-[180px]"
+        />
+        <MultiSelectFilter
+          label="매체"
+          ariaLabel="매체 선택"
+          options={options.mediums}
+          selected={filters.mediums}
+          onSelectionChange={(mediums) =>
+            onFiltersChange({ ...filters, mediums })
+          }
+          width="w-full md:w-[160px]"
+        />
+        <MultiSelectFilter
+          label="목표"
+          ariaLabel="목표 선택"
+          options={options.goals}
+          selected={filters.goals}
+          onSelectionChange={(goals) =>
+            onFiltersChange({ ...filters, goals })
+          }
+          width="w-full md:w-[140px]"
+        />
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+            className="text-muted-foreground hover:text-foreground md:ml-auto"
+          >
+            <IconX className="size-3.5" />
+            초기화
+          </Button>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground/70 truncate" aria-live="polite">
+        {filterSummary}
+      </p>
     </div>
   );
 }

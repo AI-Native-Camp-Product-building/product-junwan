@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const filters: DashboardFilters = { countries, months, mediums, goals };
+    const filters: DashboardFilters = { countries, months, mediums, goals, dateMode: "monthly", dateRange: null };
     const { data } = await fetchDashboardData(filters);
 
     // Build CSV content
