@@ -30,14 +30,25 @@ export interface AdRow {
   roas: number; // percentage
 }
 
+export type DateMode = "weekly" | "monthly" | "custom";
+
+export interface DateRange {
+  startDate: string; // ISO "YYYY-MM-DD"
+  endDate: string;   // ISO "YYYY-MM-DD"
+}
+
 /**
  * Dashboard filter state. Empty arrays mean "all" (no filter applied).
  */
 export interface DashboardFilters {
   countries: string[]; // multi-select, empty = all
-  months: string[]; // multi-select date range
+  months: string[];        // kept for backward compat
   mediums: string[]; // multi-select, empty = all
   goals: string[]; // multi-select, empty = all
+  dateMode: DateMode;      // NEW
+  dateRange: DateRange | null; // NEW — null means "all"
+  startDate?: string;      // NEW — for API query (YYYY-MM-DD)
+  endDate?: string;        // NEW — for API query (YYYY-MM-DD)
 }
 
 /**
@@ -63,6 +74,11 @@ export interface RoasTrendPoint {
   [country: string]: number | string; // dynamic keys per country for multi-line
 }
 
+export interface TrendPoint {
+  period: string; // x-axis: "2026-01" or "2026-01-15"
+  [countryOrTotal: string]: number | string;
+}
+
 /**
  * Bar chart data point for spend/revenue/ROAS by medium.
  */
@@ -82,4 +98,15 @@ export interface FilterOptions {
   months: string[];
   mediums: string[];
   goals: string[];
+}
+
+export interface Insight {
+  type: "change" | "anomaly";
+  severity: "positive" | "warning" | "danger";
+  title: string;
+  description: string;
+  metric: string;
+  country?: string;
+  value: number;
+  changePercent: number;
 }
