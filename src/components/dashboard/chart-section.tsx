@@ -1,21 +1,24 @@
-import type { RoasTrendPoint, MediumSpendPoint } from "@/types/dashboard";
-import { RoasAreaChart } from "@/components/dashboard/roas-area-chart";
+import type { TrendPoint, MediumSpendPoint } from "@/types/dashboard";
+import { TrendChart } from "@/components/dashboard/trend-chart";
 import { MediumBarChart } from "@/components/dashboard/medium-bar-chart";
 
+type MetricKey = "adSpend" | "signups" | "revenue" | "roas";
+
 interface ChartSectionProps {
-  roasTrendData: RoasTrendPoint[];
+  trendData: Record<MetricKey, TrendPoint[]>;
   mediumSpendData: MediumSpendPoint[];
   countries: string[];
   isLoading: boolean;
 }
 
 export function ChartSection({
-  roasTrendData,
+  trendData,
   mediumSpendData,
   countries,
   isLoading,
 }: ChartSectionProps) {
-  const isEmpty = roasTrendData.length === 0 && mediumSpendData.length === 0;
+  const hasNoTrendData = Object.values(trendData).every((arr) => arr.length === 0);
+  const isEmpty = hasNoTrendData && mediumSpendData.length === 0;
 
   if (isEmpty && !isLoading) {
     return (
@@ -31,8 +34,8 @@ export function ChartSection({
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-7 lg:px-6">
       <div className="lg:col-span-4">
-        <RoasAreaChart
-          data={roasTrendData}
+        <TrendChart
+          trendData={trendData}
           countries={countries}
           isLoading={isLoading}
         />
