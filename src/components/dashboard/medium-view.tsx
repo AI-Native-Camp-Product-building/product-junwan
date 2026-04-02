@@ -27,7 +27,7 @@ export function MediumView({ initialData, filterOptions, mediums }: MediumViewPr
     return { ...filterOptions, mediums: [currentMedium] };
   }, [filterOptions, currentMedium]);
 
-  const handleChange = (value: string) => {
+  const handleChange = (value: string | null) => {
     const params = new URLSearchParams();
     if (value) params.set("medium", value);
     const qs = params.toString();

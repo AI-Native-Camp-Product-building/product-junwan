@@ -27,7 +27,7 @@ export function PlatformView({ initialData, filterOptions, platforms }: Platform
     return { ...filterOptions, countries: [currentPlatform] };
   }, [filterOptions, currentPlatform]);
 
-  const handleChange = (value: string) => {
+  const handleChange = (value: string | null) => {
     const params = new URLSearchParams();
     if (value) params.set("platform", value);
     const qs = params.toString();
