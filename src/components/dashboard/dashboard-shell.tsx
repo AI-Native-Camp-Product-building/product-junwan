@@ -6,14 +6,17 @@ import type {
   DashboardFilters,
   FilterOptions,
   KpiSummary,
-  RoasTrendPoint,
   MediumSpendPoint,
+  TrendPoint,
+  DateMode,
+  DateRange,
 } from "@/types/dashboard";
 import { IconLink } from "@tabler/icons-react";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { ChartSection } from "@/components/dashboard/chart-section";
 import { DashboardDataTable } from "@/components/dashboard/dashboard-data-table";
+import { InsightsPanel } from "@/components/dashboard/insights-panel";
 import { Button } from "@/components/ui/button";
 
 interface DashboardShellProps {
@@ -73,30 +76,42 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
   return { adSpend, revenue, roas, signups, adSpendChange, revenueChange, roasChange, signupsChange };
 }
 
-/** Build ROAS trend data grouped by month (optionally per-country). */
-function computeRoasTrend(data: AdRow[]): RoasTrendPoint[] {
-  const map = new Map<string, Map<string, { spend: number; revenue: number }>>();
+type TrendMetric = "adSpend" | "signups" | "revenue" | "roas";
+
+function computeTrendData(data: AdRow[], metric: TrendMetric): TrendPoint[] {
+  const map = new Map<string, Map<string, { adSpend: number; revenue: number; signups: number }>>();
 
   for (const row of data) {
     if (!map.has(row.month)) map.set(row.month, new Map());
     const countryMap = map.get(row.month)!;
-    const existing = countryMap.get(row.country) ?? { spend: 0, revenue: 0 };
-    existing.spend += row.adSpend;
+    const existing = countryMap.get(row.country) ?? { adSpend: 0, revenue: 0, signups: 0 };
+    existing.adSpend += row.adSpend;
     existing.revenue += row.revenue;
+    existing.signups += row.signups;
     countryMap.set(row.country, existing);
   }
 
-  const result: RoasTrendPoint[] = [];
-  for (const [month, countryMap] of [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    const point: RoasTrendPoint = { month };
-    let totalSpend = 0;
-    let totalRevenue = 0;
-    for (const [country, { spend, revenue }] of countryMap) {
-      point[country] = spend > 0 ? Math.round((revenue / spend) * 100 * 10) / 10 : 0;
-      totalSpend += spend;
-      totalRevenue += revenue;
+  const result: TrendPoint[] = [];
+  for (const [period, countryMap] of [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const point: TrendPoint = { period };
+    let totalSpend = 0, totalRevenue = 0, totalSignups = 0;
+
+    for (const [country, agg] of countryMap) {
+      totalSpend += agg.adSpend;
+      totalRevenue += agg.revenue;
+      totalSignups += agg.signups;
+
+      if (metric === "adSpend") point[country] = Math.round(agg.adSpend);
+      else if (metric === "signups") point[country] = agg.signups;
+      else if (metric === "revenue") point[country] = Math.round(agg.revenue);
+      else if (metric === "roas") point[country] = agg.adSpend > 0 ? Math.round((agg.revenue / agg.adSpend) * 100 * 10) / 10 : 0;
     }
-    point["전체"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
+
+    if (metric === "adSpend") point["\uC804\uCCB4"] = Math.round(totalSpend);
+    else if (metric === "signups") point["\uC804\uCCB4"] = totalSignups;
+    else if (metric === "revenue") point["\uC804\uCCB4"] = Math.round(totalRevenue);
+    else if (metric === "roas") point["\uC804\uCCB4"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
+
     result.push(point);
   }
   return result;
@@ -125,7 +140,7 @@ function computeMediumSpend(data: AdRow[]): MediumSpendPoint[] {
 /** Read filters from URL search params on initial load. */
 function readFiltersFromUrl(options: FilterOptions): DashboardFilters {
   if (typeof window === "undefined") {
-    return { countries: [], months: [], mediums: [], goals: [] };
+    return { countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null };
   }
   const params = new URLSearchParams(window.location.search);
   const parse = (key: string, valid: string[]) => {
@@ -133,11 +148,19 @@ function readFiltersFromUrl(options: FilterOptions): DashboardFilters {
     if (!raw) return [];
     return raw.split(",").filter((v) => valid.includes(v));
   };
+
+  const dateMode = (params.get("mode") as DateMode) ?? "monthly";
+  const start = params.get("start");
+  const end = params.get("end");
+  const dateRange: DateRange | null = start && end ? { startDate: start, endDate: end } : null;
+
   return {
     countries: parse("countries", options.countries),
     months: parse("months", options.months),
     mediums: parse("mediums", options.mediums),
     goals: parse("goals", options.goals),
+    dateMode,
+    dateRange,
   };
 }
 
@@ -149,6 +172,11 @@ function syncFiltersToUrl(filters: DashboardFilters) {
   if (filters.months.length > 0) params.set("months", filters.months.join(","));
   if (filters.mediums.length > 0) params.set("mediums", filters.mediums.join(","));
   if (filters.goals.length > 0) params.set("goals", filters.goals.join(","));
+  if (filters.dateMode !== "monthly") params.set("mode", filters.dateMode);
+  if (filters.dateRange) {
+    params.set("start", filters.dateRange.startDate);
+    params.set("end", filters.dateRange.endDate);
+  }
   const qs = params.toString();
   const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
   window.history.replaceState(null, "", url);
@@ -174,9 +202,16 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
     setIsLoading(true);
     const params = new URLSearchParams();
     if (debouncedFilters.countries.length > 0) params.set("countries", debouncedFilters.countries.join(","));
-    if (debouncedFilters.months.length > 0) params.set("months", debouncedFilters.months.join(","));
     if (debouncedFilters.mediums.length > 0) params.set("mediums", debouncedFilters.mediums.join(","));
     if (debouncedFilters.goals.length > 0) params.set("goals", debouncedFilters.goals.join(","));
+
+    // Use dateRange for API if available, otherwise fall back to months
+    if (debouncedFilters.dateRange) {
+      params.set("startDate", debouncedFilters.dateRange.startDate);
+      params.set("endDate", debouncedFilters.dateRange.endDate);
+    } else if (debouncedFilters.months.length > 0) {
+      params.set("months", debouncedFilters.months.join(","));
+    }
 
     fetch(`/api/dashboard?${params.toString()}`)
       .then((res) => res.json())
@@ -186,8 +221,29 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
   }, [debouncedFilters, initialData]);
 
   const kpiSummary = React.useMemo(() => computeKpiSummary(data), [data]);
-  const roasTrendData = React.useMemo(() => computeRoasTrend(data), [data]);
   const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
+
+  const trendData = React.useMemo(() => ({
+    adSpend: computeTrendData(data, "adSpend"),
+    signups: computeTrendData(data, "signups"),
+    revenue: computeTrendData(data, "revenue"),
+    roas: computeTrendData(data, "roas"),
+  }), [data]);
+
+  // Split data into current/previous periods for insights
+  const { currentPeriodData, previousPeriodData } = React.useMemo(() => {
+    const sortedMonths = [...new Set(data.map((r) => r.month))].sort();
+    if (sortedMonths.length < 2) {
+      return { currentPeriodData: data, previousPeriodData: [] as AdRow[] };
+    }
+    const mid = Math.ceil(sortedMonths.length / 2);
+    const currentMonths = new Set(sortedMonths.slice(mid));
+    const previousMonths = new Set(sortedMonths.slice(0, mid));
+    return {
+      currentPeriodData: data.filter((r) => currentMonths.has(r.month)),
+      previousPeriodData: data.filter((r) => previousMonths.has(r.month)),
+    };
+  }, [data]);
 
   const activeCountries = React.useMemo(() => {
     const set = new Set(data.map((r) => r.country));
@@ -237,9 +293,14 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
       </div>
       <KpiCards summary={kpiSummary} isLoading={isLoading} />
       <ChartSection
-        roasTrendData={roasTrendData}
+        trendData={trendData}
         mediumSpendData={mediumSpendData}
         countries={activeCountries}
+        isLoading={isLoading}
+      />
+      <InsightsPanel
+        currentData={currentPeriodData}
+        previousData={previousPeriodData}
         isLoading={isLoading}
       />
     </div>

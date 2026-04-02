@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const [{ data: initialData }, filterOptions] = await Promise.all([
-    fetchDashboardData({ countries: [], months: [], mediums: [], goals: [] }),
+    fetchDashboardData({ countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null }),
     fetchFilterOptions(),
   ]);
 
