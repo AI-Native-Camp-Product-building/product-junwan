@@ -94,35 +94,67 @@ export interface QueryMeta {
 }
 
 /**
+ * Fetch all rows from a Supabase query using pagination.
+ * Supabase caps responses at 1000 rows regardless of .limit().
+ * This fetches in pages of 1000 until all rows are retrieved.
+ */
+async function fetchAllRows(
+  tableName: string,
+  columns: string,
+  filters: DashboardFilters,
+): Promise<{ rows: Record<string, unknown>[]; error: string | null }> {
+  const PAGE_SIZE = 1000;
+  const allRows: Record<string, unknown>[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = supabase
+      .from(tableName)
+      .select(columns)
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (filters.countries.length > 0) {
+      query = query.in("sheet_name", filters.countries);
+    }
+    // Date range takes precedence over months
+    const useDateRange = Boolean(filters.startDate && filters.endDate);
+    if (useDateRange) {
+      query = query.gte("ad_date", filters.startDate!).lte("ad_date", filters.endDate!);
+    } else if (filters.months.length > 0) {
+      query = query.in("month", filters.months);
+    }
+    if (filters.mediums.length > 0) {
+      query = query.in("medium", filters.mediums);
+    }
+    if (filters.goals.length > 0) {
+      query = query.in("goal", filters.goals);
+    }
+
+    const { data, error } = await query;
+    if (error) return { rows: allRows, error: error.message };
+
+    const page = (data ?? []) as unknown as Record<string, unknown>[];
+    allRows.push(...page);
+
+    if (page.length < PAGE_SIZE) break; // last page
+    offset += PAGE_SIZE;
+  }
+
+  return { rows: allRows, error: null };
+}
+
+/**
  * Fetch dashboard data from ad_normalized with optional filters.
  * Returns mapped AdRow[] and metadata about the result set.
+ * Uses pagination to bypass Supabase's 1000-row default cap.
  */
 export async function fetchDashboardData(
   filters: DashboardFilters,
 ): Promise<{ data: AdRow[]; meta: QueryMeta }> {
-  let query = supabase.from("ad_normalized").select(SELECT_COLUMNS);
-
-  // Apply filters — empty array means "all" (no filter)
-  if (filters.countries.length > 0) {
-    query = query.in("sheet_name", filters.countries);
-  }
-  if (filters.months.length > 0) {
-    query = query.in("month", filters.months);
-  }
-  if (filters.mediums.length > 0) {
-    query = query.in("medium", filters.mediums);
-  }
-  if (filters.goals.length > 0) {
-    query = query.in("goal", filters.goals);
-  }
-
-  // Supabase default limit is 1000; raise to 10000 for full dataset
-  query = query.limit(10000);
-
-  const { data: rows, error } = await query;
+  const { rows, error } = await fetchAllRows("ad_normalized", SELECT_COLUMNS, filters);
 
   if (error) {
-    throw new Error(`Supabase query error: ${error.message}`);
+    throw new Error(`Supabase query error: ${error}`);
   }
 
   // Cast to Record<string, unknown>[] — Supabase returns generic row objects
@@ -149,38 +181,36 @@ export async function fetchDashboardData(
  * Filters out "none" values from mediums and goals.
  */
 export async function fetchFilterOptions(): Promise<FilterOptions> {
+  const emptyFilters: DashboardFilters = { countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null };
   const [countriesRes, monthsRes, mediumsRes, goalsRes] = await Promise.all([
-    supabase.from("ad_normalized").select("sheet_name"),
-    supabase.from("ad_normalized").select("month"),
-    supabase.from("ad_normalized").select("medium"),
-    supabase.from("ad_normalized").select("goal"),
+    fetchAllRows("ad_normalized", "sheet_name", emptyFilters),
+    fetchAllRows("ad_normalized", "month", emptyFilters),
+    fetchAllRows("ad_normalized", "medium", emptyFilters),
+    fetchAllRows("ad_normalized", "goal", emptyFilters),
   ]);
 
-  // Check for errors
   for (const res of [countriesRes, monthsRes, mediumsRes, goalsRes]) {
     if (res.error) {
-      throw new Error(`Supabase filter query error: ${res.error.message}`);
+      throw new Error(`Supabase filter query error: ${res.error}`);
     }
   }
 
   const extractDistinct = (
-    rows: unknown[] | null,
+    rows: Record<string, unknown>[],
     key: string,
     excludeNone = false,
   ): string[] => {
-    if (!rows) return [];
-    const records = rows as Record<string, unknown>[];
-    const values = records
+    const values = rows
       .map((r) => String(r[key] ?? ""))
       .filter((v) => v !== "" && (!excludeNone || v !== "none"));
     return uniqueSorted([...new Set(values)]);
   };
 
   return {
-    countries: extractDistinct(countriesRes.data, "sheet_name"),
-    months: extractDistinct(monthsRes.data, "month"),
-    mediums: extractDistinct(mediumsRes.data, "medium", true),
-    goals: extractDistinct(goalsRes.data, "goal", true),
+    countries: extractDistinct(countriesRes.rows, "sheet_name"),
+    months: extractDistinct(monthsRes.rows, "month"),
+    mediums: extractDistinct(mediumsRes.rows, "medium", true),
+    goals: extractDistinct(goalsRes.rows, "goal", true),
   };
 }
 

@@ -63,7 +63,35 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const filters: DashboardFilters = { countries, months, mediums, goals };
+    const startDate = searchParams.get("startDate") ?? undefined;
+    const endDate = searchParams.get("endDate") ?? undefined;
+
+    if (startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: `Invalid startDate format: '${startDate}'. Expected YYYY-MM-DD.` },
+        { status: 400 },
+      );
+    }
+    if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: `Invalid endDate format: '${endDate}'. Expected YYYY-MM-DD.` },
+        { status: 400 },
+      );
+    }
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: "Both startDate and endDate must be provided together." },
+        { status: 400 },
+      );
+    }
+    if (startDate && endDate && startDate > endDate) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: "startDate must be before or equal to endDate." },
+        { status: 400 },
+      );
+    }
+
+    const filters: DashboardFilters = { countries, months, mediums, goals, dateMode: "monthly", dateRange: null, startDate, endDate };
     const { data, meta } = await fetchDashboardData(filters);
 
     return NextResponse.json(
