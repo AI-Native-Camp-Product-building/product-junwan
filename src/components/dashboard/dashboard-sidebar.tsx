@@ -20,6 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { SyncStatus } from "@/components/dashboard/sync-status";
 
 const navMain = [
   {
@@ -145,6 +146,8 @@ export function DashboardSidebar({
               );
             })}
           </SidebarMenu>
+          <Separator className="my-2 bg-white/[0.06]" />
+          <SyncStatus />
         </div>
       </SidebarContent>
     </Sidebar>

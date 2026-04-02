@@ -108,6 +108,32 @@ function ChangeBadge({
 }
 
 export function KpiCards({ summary, isLoading }: KpiCardsProps) {
+  const isEmpty =
+    summary.adSpend === 0 && summary.revenue === 0 && summary.signups === 0;
+
+  if (isEmpty && !isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+        {kpiDefs.map((def) => (
+          <Card
+            key={def.label}
+            className="@container/card bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px]"
+          >
+            <CardHeader>
+              <CardDescription>{def.label}</CardDescription>
+              <CardTitle className="text-2xl font-semibold text-muted-foreground">
+                --
+              </CardTitle>
+            </CardHeader>
+            <CardFooter className="text-sm text-muted-foreground">
+              데이터 없음
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 *:data-[slot=card]:shadow-xs">
       {kpiDefs.map((def, i) => (
