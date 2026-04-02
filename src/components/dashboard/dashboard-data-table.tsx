@@ -20,7 +20,11 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconGripVertical,
+  IconDownload,
+  IconFlame,
 } from "@tabler/icons-react";
+
+import { exportToCsv } from "@/lib/csv-export";
 
 import type { AdRow } from "@/types/dashboard";
 import {
@@ -227,6 +231,7 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [draggedCol, setDraggedCol] = React.useState<string | null>(null);
+  const [heatmapEnabled, setHeatmapEnabled] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -249,6 +254,33 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
       pagination: { pageSize: 20 },
     },
   });
+
+  const HEATMAP_COLUMNS = ["adSpend", "impressions", "clicks", "ctr", "signups", "signupCpa", "conversions", "revenue", "roas"] as const;
+
+  const columnMinMax = React.useMemo(() => {
+    if (!heatmapEnabled || data.length === 0) return null;
+    const result: Record<string, { min: number; max: number }> = {};
+    for (const col of HEATMAP_COLUMNS) {
+      let min = Infinity, max = -Infinity;
+      for (const row of data) {
+        const v = row[col] as number;
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+      result[col] = { min, max };
+    }
+    return result;
+  }, [data, heatmapEnabled]);
+
+  function getHeatmapStyle(columnId: string, value: unknown, minMax: Record<string, { min: number; max: number }> | null): React.CSSProperties | undefined {
+    if (!minMax || !(columnId in minMax)) return undefined;
+    const num = Number(value);
+    if (isNaN(num)) return undefined;
+    const { min, max } = minMax[columnId];
+    if (max === min) return undefined;
+    const intensity = (num - min) / (max - min);
+    return { backgroundColor: `hsl(var(--chart-1) / ${(intensity * 0.2).toFixed(3)})` };
+  }
 
   if (isLoading) {
     return (
@@ -282,6 +314,31 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
             className="max-w-sm bg-white/[0.03] border-white/[0.08]"
             aria-label="테이블 검색"
           />
+          <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              const visibleRows = table.getFilteredRowModel().rows.map((r) => r.original);
+              exportToCsv(visibleRows, `adinsight-${new Date().toISOString().slice(0, 10)}.csv`);
+            }}
+            aria-label="CSV 다운로드"
+          >
+            <IconDownload className="size-4" />
+            CSV
+          </Button>
+          <Button
+            variant={heatmapEnabled ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setHeatmapEnabled((v) => !v)}
+            aria-label="히트맵 토글"
+            aria-pressed={heatmapEnabled}
+          >
+            <IconFlame className="size-4" />
+            히트맵
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -310,6 +367,7 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         {/* Table */}
@@ -380,7 +438,11 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="whitespace-nowrap">
+                      <TableCell
+                        key={cell.id}
+                        className="whitespace-nowrap"
+                        style={getHeatmapStyle(cell.column.id, cell.getValue(), columnMinMax)}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
