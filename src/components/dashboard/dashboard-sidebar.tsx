@@ -5,9 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconChartBar,
-  IconWorld,
-  IconDeviceDesktop,
-  IconFileText,
+  IconTable,
+  IconChartDots,
   IconSettings,
 } from "@tabler/icons-react";
 
@@ -29,19 +28,14 @@ const navMain = [
     icon: IconChartBar,
   },
   {
-    title: "Countries",
-    href: "/dashboard/countries",
-    icon: IconWorld,
+    title: "Data Explorer",
+    href: "/dashboard/explorer",
+    icon: IconTable,
   },
   {
-    title: "Media",
-    href: "/dashboard/media",
-    icon: IconDeviceDesktop,
-  },
-  {
-    title: "Reports",
-    href: "/dashboard/reports",
-    icon: IconFileText,
+    title: "Analysis",
+    href: "/dashboard/analysis",
+    icon: IconChartDots,
   },
 ];
 

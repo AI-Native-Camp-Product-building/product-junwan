@@ -33,11 +33,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  "rgba(200,200,210,0.9)",
+  "rgba(170,180,200,0.8)",
+  "rgba(150,160,180,0.7)",
+  "rgba(130,140,165,0.65)",
+  "rgba(180,185,195,0.75)",
 ];
 
 interface RoasAreaChartProps {
@@ -181,6 +181,8 @@ export function RoasAreaChart({ data, countries, isLoading }: RoasAreaChartProps
                   fill={`url(#fill-${safeId})`}
                   stroke={color}
                   strokeWidth={2}
+                  dot={{ r: 3, fill: color, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: color, strokeWidth: 2, stroke: "rgba(255,255,255,0.3)" }}
                   animationDuration={500}
                   animationEasing="ease-out"
                 />

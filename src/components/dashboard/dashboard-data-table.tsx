@@ -11,6 +11,7 @@ import {
   type ColumnDef,
   type SortingState,
   type VisibilityState,
+  type ColumnOrderState,
 } from "@tanstack/react-table";
 import {
   IconArrowUp,
@@ -18,6 +19,7 @@ import {
   IconLayoutColumns,
   IconChevronLeft,
   IconChevronRight,
+  IconGripVertical,
 } from "@tabler/icons-react";
 
 import type { AdRow } from "@/types/dashboard";
@@ -114,6 +116,15 @@ const columns: ColumnDef<AdRow>[] = [
     accessorKey: "creativeType",
     header: "소재종류",
     enableHiding: true,
+  },
+  {
+    accessorKey: "creativeName",
+    header: "작품명",
+    cell: ({ getValue }) => (
+      <span className="max-w-[180px] truncate block" title={getValue<string>()}>
+        {getValue<string>()}
+      </span>
+    ),
   },
   {
     accessorKey: "adSpend",
@@ -213,7 +224,9 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
   ]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>(DEFAULT_HIDDEN);
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [draggedCol, setDraggedCol] = React.useState<string | null>(null);
 
   const table = useReactTable({
     data,
@@ -221,10 +234,12 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
     state: {
       sorting,
       columnVisibility,
+      columnOrder,
       globalFilter,
     },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -306,27 +321,45 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="whitespace-nowrap cursor-pointer select-none"
-                      onClick={header.column.getToggleSortingHandler()}
-                      aria-sort={
-                        header.column.getIsSorted() === "asc"
-                          ? "ascending"
-                          : header.column.getIsSorted() === "desc"
-                            ? "descending"
-                            : "none"
-                      }
+                      className={`whitespace-nowrap select-none ${draggedCol === header.id ? "opacity-50" : ""}`}
+                      draggable
+                      onDragStart={() => setDraggedCol(header.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (draggedCol && draggedCol !== header.id) {
+                          const currentOrder = columnOrder.length > 0
+                            ? [...columnOrder]
+                            : table.getAllLeafColumns().map((c) => c.id);
+                          const fromIdx = currentOrder.indexOf(draggedCol);
+                          const toIdx = currentOrder.indexOf(header.id);
+                          if (fromIdx !== -1 && toIdx !== -1) {
+                            currentOrder.splice(fromIdx, 1);
+                            currentOrder.splice(toIdx, 0, draggedCol);
+                            setColumnOrder(currentOrder);
+                          }
+                        }
+                        setDraggedCol(null);
+                      }}
+                      onDragEnd={() => setDraggedCol(null)}
                     >
                       <div className="flex items-center gap-1">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getIsSorted() === "asc" && (
-                          <IconArrowUp className="size-3.5" />
-                        )}
-                        {header.column.getIsSorted() === "desc" && (
-                          <IconArrowDown className="size-3.5" />
-                        )}
+                        <IconGripVertical className="size-3 text-muted-foreground/40 cursor-grab active:cursor-grabbing shrink-0" />
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 cursor-pointer"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getIsSorted() === "asc" && (
+                            <IconArrowUp className="size-3.5" />
+                          )}
+                          {header.column.getIsSorted() === "desc" && (
+                            <IconArrowDown className="size-3.5" />
+                          )}
+                        </button>
                       </div>
                     </TableHead>
                   ))}

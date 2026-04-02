@@ -122,16 +122,6 @@ function computeMediumSpend(data: AdRow[]): MediumSpendPoint[] {
     .sort((a, b) => b.adSpend - a.adSpend);
 }
 
-function filterData(data: AdRow[], filters: DashboardFilters): AdRow[] {
-  return data.filter((row) => {
-    if (filters.countries.length > 0 && !filters.countries.includes(row.country)) return false;
-    if (filters.months.length > 0 && !filters.months.includes(row.month)) return false;
-    if (filters.mediums.length > 0 && !filters.mediums.includes(row.medium)) return false;
-    if (filters.goals.length > 0 && !filters.goals.includes(row.goal)) return false;
-    return true;
-  });
-}
-
 /** Read filters from URL search params on initial load. */
 function readFiltersFromUrl(options: FilterOptions): DashboardFilters {
   if (typeof window === "undefined") {
@@ -179,20 +169,8 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
 
   const debouncedFilters = useDebounce(filters, 300);
 
-  // Fetch data when filters change
+  // Fetch data when filters change (or on initial load)
   React.useEffect(() => {
-    // Skip fetch if no initial data and no filters (first render)
-    const hasFilters =
-      debouncedFilters.countries.length > 0 ||
-      debouncedFilters.months.length > 0 ||
-      debouncedFilters.mediums.length > 0 ||
-      debouncedFilters.goals.length > 0;
-
-    if (!hasFilters && initialData.length > 0) {
-      setData(initialData);
-      return;
-    }
-
     setIsLoading(true);
     const params = new URLSearchParams();
     if (debouncedFilters.countries.length > 0) params.set("countries", debouncedFilters.countries.join(","));
@@ -264,7 +242,6 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
         countries={activeCountries}
         isLoading={isLoading}
       />
-      <DashboardDataTable data={data} isLoading={isLoading} />
     </div>
   );
 }

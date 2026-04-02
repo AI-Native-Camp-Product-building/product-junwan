@@ -35,9 +35,9 @@ const metricTabs: { value: MetricKey; label: string }[] = [
 ];
 
 const chartConfig: ChartConfig = {
-  adSpend: { label: "광고비", color: "var(--chart-1)" },
-  revenue: { label: "결제금액", color: "var(--chart-2)" },
-  roas: { label: "ROAS", color: "var(--chart-3)" },
+  adSpend: { label: "광고비", color: "rgba(200,200,210,0.9)" },
+  revenue: { label: "결제금액", color: "rgba(170,180,200,0.8)" },
+  roas: { label: "ROAS", color: "rgba(150,160,180,0.7)" },
 };
 
 function formatBarValue(value: number, metric: MetricKey): string {

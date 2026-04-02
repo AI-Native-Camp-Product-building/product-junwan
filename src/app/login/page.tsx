@@ -14,26 +14,11 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error);
-        return;
-      }
-
-      // 로그인 성공 → 대시보드로 이동 (추후 구현)
-      window.location.href = "/";
-    } catch {
-      setError("서버에 연결할 수 없습니다");
-    } finally {
-      setLoading(false);
-    }
+    // 더미 모드: 아무 ID/PW로든 대시보드 진입
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 500);
+    return;
   };
 
   return (

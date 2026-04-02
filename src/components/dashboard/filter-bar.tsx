@@ -10,14 +10,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface FilterBarProps {
@@ -44,6 +36,7 @@ function MultiSelectFilter({
   width = "w-[180px]",
 }: MultiSelectFilterProps) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
 
   const toggleItem = (item: string) => {
     if (selected.includes(item)) {
@@ -53,13 +46,19 @@ function MultiSelectFilter({
     }
   };
 
+  const filteredOptions = React.useMemo(() => {
+    if (!search.trim()) return options;
+    const q = search.toLowerCase();
+    return options.filter((opt) => opt.toLowerCase().includes(q));
+  }, [options, search]);
+
   const displayText =
     selected.length === 0
       ? "전체"
       : `${label} (${selected.length})`;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSearch(""); }}>
       <PopoverTrigger
         render={
           <Button
@@ -83,31 +82,47 @@ function MultiSelectFilter({
         className="w-[220px] p-0 bg-popover/95 backdrop-blur-lg border-white/[0.08]"
         align="start"
       >
-        <Command>
-          <CommandInput placeholder={`${label} 검색...`} />
-          <CommandList>
-            <CommandEmpty>결과 없음</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => {
+        <div className="flex flex-col">
+          <input
+            type="text"
+            placeholder={`${label} 검색...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3 py-2 text-sm bg-transparent border-b border-white/[0.06] outline-none placeholder:text-muted-foreground/50"
+          />
+          <div className="max-h-[200px] overflow-y-auto p-1">
+            {filteredOptions.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">결과 없음</p>
+            ) : (
+              filteredOptions.map((option) => {
                 const isSelected = selected.includes(option);
                 return (
-                  <CommandItem
+                  <button
                     key={option}
-                    value={option}
-                    onSelect={() => toggleItem(option)}
-                    className="flex items-center gap-2"
+                    type="button"
+                    onClick={() => toggleItem(option)}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/[0.06] transition-colors"
                   >
                     <Checkbox
                       checked={isSelected}
                       className="pointer-events-none"
                     />
-                    <span>{option}</span>
-                  </CommandItem>
+                    <span className={isSelected ? "text-foreground" : "text-foreground/70"}>{option}</span>
+                  </button>
                 );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+              })
+            )}
+          </div>
+          {selected.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onSelectionChange([])}
+              className="border-t border-white/[0.06] px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              선택 해제
+            </button>
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   );
