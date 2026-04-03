@@ -137,12 +137,18 @@ function computeMediumSpend(data: AdRow[]): MediumSpendPoint[] {
     .sort((a, b) => b.adSpend - a.adSpend);
 }
 
-/** Read filters from URL search params on initial load. */
-function readFiltersFromUrl(options: FilterOptions): DashboardFilters {
-  if (typeof window === "undefined") {
-    return { countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null };
-  }
+/** Default filter state — used for SSR and as initial client state. */
+const DEFAULT_FILTERS: DashboardFilters = {
+  countries: [], months: [], mediums: [], goals: [],
+  dateMode: "monthly", dateRange: null,
+};
+
+/** Read filters from URL search params. Client-only (returns null on server). */
+function readFiltersFromUrl(options: FilterOptions): DashboardFilters | null {
+  if (typeof window === "undefined") return null;
   const params = new URLSearchParams(window.location.search);
+  if (params.size === 0) return null;
+
   const parse = (key: string, valid: string[]) => {
     const raw = params.get(key);
     if (!raw) return [];
@@ -183,15 +189,22 @@ function syncFiltersToUrl(filters: DashboardFilters) {
 }
 
 export function DashboardShell({ initialData, filterOptions }: DashboardShellProps) {
-  const [filters, setFilters] = React.useState<DashboardFilters>(() =>
-    readFiltersFromUrl(filterOptions)
-  );
+  const [filters, setFilters] = React.useState<DashboardFilters>(DEFAULT_FILTERS);
   const [data, setData] = React.useState<AdRow[]>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
+  const [hydrated, setHydrated] = React.useState(false);
 
-  // Sync filters to URL on change
+  // Read URL params only after hydration to avoid SSR/client mismatch
   React.useEffect(() => {
+    const urlFilters = readFiltersFromUrl(filterOptions);
+    if (urlFilters) setFilters(urlFilters);
+    setHydrated(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync filters to URL on change (skip initial hydration sync)
+  React.useEffect(() => {
+    if (!hydrated) return;
     syncFiltersToUrl(filters);
   }, [filters]);
 
