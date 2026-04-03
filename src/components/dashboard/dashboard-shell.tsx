@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 interface DashboardShellProps {
   initialData: AdRow[];
   filterOptions: FilterOptions;
+  /** Optional initial filter overrides (e.g. pre-selecting a country or medium). */
+  initialFilters?: Partial<DashboardFilters>;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -188,8 +190,11 @@ function syncFiltersToUrl(filters: DashboardFilters) {
   window.history.replaceState(null, "", url);
 }
 
-export function DashboardShell({ initialData, filterOptions }: DashboardShellProps) {
-  const [filters, setFilters] = React.useState<DashboardFilters>(DEFAULT_FILTERS);
+export function DashboardShell({ initialData, filterOptions, initialFilters }: DashboardShellProps) {
+  const [filters, setFilters] = React.useState<DashboardFilters>({
+    ...DEFAULT_FILTERS,
+    ...initialFilters,
+  });
   const [data, setData] = React.useState<AdRow[]>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
@@ -263,6 +268,19 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
     return [...set].sort();
   }, [data]);
 
+  // Compute the latest date present in data — used as reference for date picker mode switching
+  const latestDataDate = React.useMemo(() => {
+    if (initialData.length === 0) return undefined;
+    const months = initialData.map((r) => r.month).sort();
+    // month is YYYY-MM format; use last day of the latest month as reference
+    const latest = months[months.length - 1];
+    if (!latest) return undefined;
+    // Return end-of-month as YYYY-MM-DD (e.g. "2026-03" -> "2026-03-31")
+    const [y, m] = latest.split("-").map(Number);
+    const endOfMonth = new Date(y, m, 0); // day 0 of next month = last day of this month
+    return `${y}-${String(m).padStart(2, "0")}-${String(endOfMonth.getDate()).padStart(2, "0")}`;
+  }, [initialData]);
+
   const handleCopyLink = React.useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -289,6 +307,7 @@ export function DashboardShell({ initialData, filterOptions }: DashboardShellPro
             filters={filters}
             onFiltersChange={setFilters}
             options={filterOptions}
+            latestDataDate={latestDataDate}
           />
         </div>
         <div className="px-4 lg:px-6 md:pt-0">

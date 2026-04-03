@@ -49,7 +49,7 @@ export function PlatformView({ initialData, filterOptions, platforms }: Platform
         </Select>
       </div>
       {currentPlatform ? (
-        <DashboardShell key={currentPlatform} initialData={filteredData} filterOptions={adjustedOptions} />
+        <DashboardShell key={currentPlatform} initialData={filteredData} filterOptions={adjustedOptions} initialFilters={{ countries: [currentPlatform] }} />
       ) : (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
           상단에서 플랫폼을 선택하면 해당 플랫폼의 성과 데이터를 확인할 수 있습니다.

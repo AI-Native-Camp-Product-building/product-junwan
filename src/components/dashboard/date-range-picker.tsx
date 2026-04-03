@@ -126,6 +126,8 @@ export interface DateRangePickerProps {
   onModeChange: (mode: DateMode) => void;
   value: DateRange | null;
   onChange: (range: DateRange) => void;
+  /** Optional hint for the latest date with data — used instead of "today" when switching modes. */
+  latestDataDate?: string;
 }
 
 const MODES: { key: DateMode; label: string }[] = [
@@ -139,17 +141,24 @@ export function DateRangePicker({
   onModeChange,
   value,
   onChange,
+  latestDataDate,
 }: DateRangePickerProps) {
   // Today as reference point
   const today = React.useMemo(() => new Date(), []);
 
-  // Initialise a range when it's null
+  // Reference date for mode switching: use latest data date if provided, otherwise today
+  const referenceDate = React.useMemo(
+    () => (latestDataDate ? parseISO(latestDataDate) : today),
+    [latestDataDate, today]
+  );
+
+  // Initialise a range when it's null — prefer referenceDate (latest data) over today
   const ensuredValue = React.useMemo((): DateRange => {
     if (value) return value;
-    if (mode === "weekly") return getWeekRange(today);
-    if (mode === "monthly") return getMonthRange(today);
-    return { startDate: toISO(today), endDate: toISO(today) };
-  }, [value, mode, today]);
+    if (mode === "weekly") return getWeekRange(referenceDate);
+    if (mode === "monthly") return getMonthRange(referenceDate);
+    return { startDate: toISO(referenceDate), endDate: toISO(referenceDate) };
+  }, [value, mode, referenceDate]);
 
   // ── weekly navigation ─────────────────────────────────────────────────
   const handleWeekPrev = React.useCallback(() => {
@@ -191,11 +200,11 @@ export function DateRangePicker({
 
   const handleModeChange = (newMode: DateMode) => {
     onModeChange(newMode);
-    // Re-derive range for new mode
+    // Re-derive range for new mode — use referenceDate (latest data) instead of today
     if (newMode === "weekly") {
-      onChange(getWeekRange(today));
+      onChange(getWeekRange(referenceDate));
     } else if (newMode === "monthly") {
-      onChange(getMonthRange(today));
+      onChange(getMonthRange(referenceDate));
     }
     // custom: keep existing value or leave parent to set it
   };

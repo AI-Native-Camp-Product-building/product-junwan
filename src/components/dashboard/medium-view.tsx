@@ -49,7 +49,7 @@ export function MediumView({ initialData, filterOptions, mediums }: MediumViewPr
         </Select>
       </div>
       {currentMedium ? (
-        <DashboardShell key={currentMedium} initialData={filteredData} filterOptions={adjustedOptions} />
+        <DashboardShell key={currentMedium} initialData={filteredData} filterOptions={adjustedOptions} initialFilters={{ mediums: [currentMedium] }} />
       ) : (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
           상단에서 매체를 선택하면 해당 매체의 성과 데이터를 확인할 수 있습니다.

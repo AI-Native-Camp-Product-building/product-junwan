@@ -17,6 +17,8 @@ interface FilterBarProps {
   filters: DashboardFilters;
   onFiltersChange: (filters: DashboardFilters) => void;
   options: FilterOptions;
+  /** Latest date with data — forwarded to DateRangePicker for mode switching. */
+  latestDataDate?: string;
 }
 
 interface MultiSelectFilterProps {
@@ -152,7 +154,7 @@ function buildFilterSummary(filters: DashboardFilters): string {
   return parts.length > 0 ? parts.join(" / ") : "전체 데이터";
 }
 
-export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps) {
+export function FilterBar({ filters, onFiltersChange, options, latestDataDate }: FilterBarProps) {
   const hasActiveFilters =
     filters.countries.length > 0 ||
     filters.months.length > 0 ||
@@ -181,6 +183,7 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
         onModeChange={(dateMode) => onFiltersChange({ ...filters, dateMode })}
         value={filters.dateRange ?? null}
         onChange={(dateRange) => onFiltersChange({ ...filters, dateRange })}
+        latestDataDate={latestDataDate}
       />
 
       {/* Other filters row */}
