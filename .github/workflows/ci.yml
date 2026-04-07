@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, Type Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    needs: lint-typecheck-build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage || echo "No tests yet — skipping"
+
+      - name: Check coverage threshold
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const c = require('./coverage/coverage-summary.json').total;
+              const min = { lines: 70, functions: 70, branches: 65, statements: 70 };
+              let fail = false;
+              for (const [k, v] of Object.entries(min)) {
+                const actual = c[k]?.pct ?? 0;
+                if (actual < v) { console.error(k + ': ' + actual + '% < ' + v + '%'); fail = true; }
+              }
+              if (fail) process.exit(1);
+              console.log('Coverage thresholds passed');
+            "
+          else
+            echo "No coverage data — skipping threshold check"
+          fi

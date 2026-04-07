@@ -1,0 +1,48 @@
+name: Weekly Cleanup
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-branches:
+    name: Delete stale branches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete merged branches older than 30 days
+        run: |
+          git fetch --prune
+          CUTOFF=$(date -d "30 days ago" +%s)
+          for branch in $(git branch -r --merged origin/main | grep -v 'main$' | grep -v 'HEAD' | sed 's|origin/||'); do
+            LAST_COMMIT=$(git log -1 --format=%ct "origin/$branch" 2>/dev/null || echo 0)
+            if [ "$LAST_COMMIT" -lt "$CUTOFF" ] && [ "$LAST_COMMIT" -gt 0 ]; then
+              echo "Deleting stale branch: $branch (last commit: $(date -d @$LAST_COMMIT +%Y-%m-%d))"
+              git push origin --delete "$branch" || true
+            fi
+          done
+
+  cleanup-cache:
+    name: Clear old build caches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clear GitHub Actions cache
+        run: |
+          gh cache list --limit 100 | while read -r id rest; do
+            CREATED=$(echo "$rest" | awk '{print $NF}')
+            if [ -n "$CREATED" ]; then
+              echo "Deleting cache: $id"
+              gh cache delete "$id" || true
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
