@@ -15,7 +15,19 @@ interface MediumViewProps {
 export function MediumView({ initialData, filterOptions, mediums }: MediumViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentMedium = searchParams.get("medium") ?? "";
+  // KEYWORD: dashboard-medium-query-fallback
+  const currentMedium = React.useMemo(() => {
+    const explicitMedium = searchParams.get("medium");
+    if (explicitMedium) return explicitMedium;
+
+    const mediumFilters = searchParams
+      .get("mediums")
+      ?.split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    return mediumFilters?.length === 1 ? mediumFilters[0] : "";
+  }, [searchParams]);
 
   const filteredData = React.useMemo(() => {
     if (!currentMedium) return initialData;
@@ -27,11 +39,37 @@ export function MediumView({ initialData, filterOptions, mediums }: MediumViewPr
     return { ...filterOptions, mediums: [currentMedium] };
   }, [filterOptions, currentMedium]);
 
+  const lockedFilters = React.useMemo(
+    () => (currentMedium ? { mediums: [currentMedium] } : undefined),
+    [currentMedium],
+  );
+
+  const initialFilters = React.useMemo(
+    () => (currentMedium ? { mediums: [currentMedium] } : undefined),
+    [currentMedium],
+  );
+
+  const hiddenFilters = React.useMemo(
+    () => ["mediums"] as Array<"countries" | "mediums" | "goals">,
+    [],
+  );
+
+  // KEYWORD: dashboard-medium-fixed-filter
   const handleChange = (value: string | null) => {
-    const params = new URLSearchParams();
-    if (value) params.set("medium", value);
-    const qs = params.toString();
-    router.push(qs ? `/dashboard/medium?${qs}` : "/dashboard/medium");
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (value) {
+      params.set("medium", value);
+      params.set("mediums", value);
+    } else {
+      params.delete("medium");
+      params.delete("mediums");
+    }
+
+    const queryString = params.toString();
+    router.push(
+      queryString ? `/dashboard/medium?${queryString}` : "/dashboard/medium",
+    );
   };
 
   return (
@@ -47,9 +85,26 @@ export function MediumView({ initialData, filterOptions, mediums }: MediumViewPr
             ))}
           </SelectContent>
         </Select>
+        {currentMedium ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            매체 고정 필터: {currentMedium}
+          </p>
+        ) : null}
+        {currentMedium ? (
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            기간, 플랫폼, 목표를 조정하면서 선택한 매체 안에서만 상세 분석합니다.
+          </p>
+        ) : null}
       </div>
       {currentMedium ? (
-        <DashboardShell key={currentMedium} initialData={filteredData} filterOptions={adjustedOptions} initialFilters={{ mediums: [currentMedium] }} />
+        <DashboardShell
+          key={currentMedium}
+          initialData={filteredData}
+          filterOptions={adjustedOptions}
+          initialFilters={initialFilters}
+          hiddenFilters={hiddenFilters}
+          lockedFilters={lockedFilters}
+        />
       ) : (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
           상단에서 매체를 선택하면 해당 매체의 성과 데이터를 확인할 수 있습니다.

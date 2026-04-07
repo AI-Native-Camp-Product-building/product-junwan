@@ -7,6 +7,7 @@ import {
   IconHome,
   IconBuildingStore,
   IconSpeakerphone,
+  IconSearch,
 } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ import { SyncStatus } from "@/components/dashboard/sync-status";
 
 const navMain = [
   { title: "홈", href: "/dashboard", icon: IconHome },
+  { title: "탐색", href: "/dashboard/explore", icon: IconSearch },
   { title: "플랫폼별", href: "/dashboard/platform", icon: IconBuildingStore },
   { title: "매체별", href: "/dashboard/medium", icon: IconSpeakerphone },
 ];

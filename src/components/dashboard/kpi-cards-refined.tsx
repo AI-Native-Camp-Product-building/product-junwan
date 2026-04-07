@@ -1,7 +1,9 @@
 "use client";
 
-import { IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
+import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
+
 import type { KpiSummary } from "@/types/dashboard";
+import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -13,64 +15,51 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface KpiCardsProps {
+interface KpiCardsRefinedProps {
   summary: KpiSummary;
   isLoading: boolean;
 }
 
-/** Format KRW currency with compact notation for large values. */
-function formatKrw(value: number): string {
-  if (value >= 1_0000_0000) {
-    return `₩${(value / 1_0000_0000).toFixed(1)}억`;
-  }
-  if (value >= 1_0000) {
-    return `₩${(value / 1_0000).toFixed(0)}만`;
-  }
-  return `₩${new Intl.NumberFormat("ko-KR").format(Math.round(value))}`;
-}
-
-function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ko-KR").format(Math.round(value));
-}
-
-interface KpiCardDef {
+interface KpiCardDefinition {
   label: string;
-  getValue: (s: KpiSummary) => string;
-  getChange: (s: KpiSummary) => number;
+  getValue: (summary: KpiSummary) => string;
+  getChange: (summary: KpiSummary) => number;
   changeLabel: string;
-  /** For ad spend, positive is neutral not positive */
   neutralPositive?: boolean;
 }
 
-const kpiDefs: KpiCardDef[] = [
+// KEYWORD: dashboard-kpi-card-layout
+const KPI_CARD_DEFINITIONS: KpiCardDefinition[] = [
   {
-    label: "Total 광고비",
-    getValue: (s) => formatKrw(s.adSpend),
-    getChange: (s) => s.adSpendChange,
+    label: "총 광고비",
+    getValue: (summary) => formatKrw(summary.adSpend),
+    getChange: (summary) => summary.adSpendChange,
     changeLabel: "전월 대비",
     neutralPositive: true,
   },
   {
-    label: "Total 결제금액",
-    getValue: (s) => formatKrw(s.revenue),
-    getChange: (s) => s.revenueChange,
+    label: "총 회원가입",
+    getValue: (summary) => formatNumber(summary.signups),
+    getChange: (summary) => summary.signupsChange,
+    changeLabel: "전월 대비",
+  },
+  {
+    label: "총 결제전환",
+    getValue: (summary) => formatNumber(summary.conversions),
+    getChange: (summary) => summary.conversionsChange,
+    changeLabel: "전월 대비",
+  },
+  {
+    label: "총 결제금액",
+    getValue: (summary) => formatKrw(summary.revenue),
+    getChange: (summary) => summary.revenueChange,
     changeLabel: "전월 대비",
   },
   {
     label: "평균 ROAS",
-    getValue: (s) => formatPercent(s.roas),
-    getChange: (s) => s.roasChange,
+    getValue: (summary) => formatPercent(summary.roas),
+    getChange: (summary) => summary.roasChange,
     changeLabel: "전월 대비 (pp)",
-  },
-  {
-    label: "Total 회원가입",
-    getValue: (s) => formatNumber(s.signups),
-    getChange: (s) => s.signupsChange,
-    changeLabel: "전월 대비",
   },
 ];
 
@@ -86,7 +75,6 @@ function ChangeBadge({
   const sign = isPositive ? "+" : "";
   const displayValue = `${sign}${change.toFixed(1)}%`;
 
-  // Determine badge style
   const isGood = neutralPositive ? false : isPositive;
   const isBad = neutralPositive ? false : !isPositive;
 
@@ -95,9 +83,9 @@ function ChangeBadge({
       variant="outline"
       className={
         isBad
-          ? "bg-[rgba(239,68,68,0.1)] text-[hsl(0,72%,51%)] border-[rgba(239,68,68,0.2)]"
+          ? "border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[hsl(0,72%,51%)]"
           : isGood
-            ? "bg-[rgba(16,185,129,0.1)] text-[hsl(160,60%,45%)] border-[rgba(16,185,129,0.2)]"
+            ? "border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.1)] text-[hsl(160,60%,45%)]"
             : ""
       }
     >
@@ -107,20 +95,26 @@ function ChangeBadge({
   );
 }
 
-export function KpiCards({ summary, isLoading }: KpiCardsProps) {
+export function KpiCardsRefined({
+  summary,
+  isLoading,
+}: KpiCardsRefinedProps) {
   const isEmpty =
-    summary.adSpend === 0 && summary.revenue === 0 && summary.signups === 0;
+    summary.adSpend === 0 &&
+    summary.revenue === 0 &&
+    summary.signups === 0 &&
+    summary.conversions === 0;
 
   if (isEmpty && !isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-        {kpiDefs.map((def) => (
+      <div className="grid grid-cols-1 gap-4 px-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 lg:px-6">
+        {KPI_CARD_DEFINITIONS.map((definition) => (
           <Card
-            key={def.label}
-            className="@container/card bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px]"
+            key={definition.label}
+            className="@container/card border-white/[0.08] bg-white/[0.03] backdrop-blur-[12px]"
           >
             <CardHeader>
-              <CardDescription>{def.label}</CardDescription>
+              <CardDescription>{definition.label}</CardDescription>
               <CardTitle className="text-2xl font-semibold text-muted-foreground">
                 --
               </CardTitle>
@@ -135,22 +129,20 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 *:data-[slot=card]:shadow-xs">
-      {kpiDefs.map((def, i) => (
+    <div className="grid grid-cols-1 gap-4 px-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 lg:px-6 *:data-[slot=card]:shadow-xs">
+      {KPI_CARD_DEFINITIONS.map((definition, index) => (
         <Card
-          key={def.label}
-          className="@container/card bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px] animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-both"
-          style={{
-            animationDelay: `${i * 100}ms`,
-          }}
+          key={definition.label}
+          className="@container/card animate-in slide-in-from-bottom-2 fade-in border-white/[0.08] bg-white/[0.03] backdrop-blur-[12px] duration-500 fill-mode-both"
+          style={{ animationDelay: `${index * 80}ms` }}
         >
           <CardHeader>
-            <CardDescription>{def.label}</CardDescription>
+            <CardDescription>{definition.label}</CardDescription>
             {isLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                {def.getValue(summary)}
+                {definition.getValue(summary)}
               </CardTitle>
             )}
             <CardAction>
@@ -158,8 +150,8 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
                 <Skeleton className="h-5 w-16" />
               ) : (
                 <ChangeBadge
-                  change={def.getChange(summary)}
-                  neutralPositive={def.neutralPositive}
+                  change={definition.getChange(summary)}
+                  neutralPositive={definition.neutralPositive}
                 />
               )}
             </CardAction>
@@ -170,8 +162,8 @@ export function KpiCards({ summary, isLoading }: KpiCardsProps) {
                 <Skeleton className="h-4 w-40" />
               ) : (
                 <>
-                  {def.changeLabel}
-                  {def.getChange(summary) >= 0 ? (
+                  {definition.changeLabel}
+                  {definition.getChange(summary) >= 0 ? (
                     <IconTrendingUp className="size-4 text-[hsl(160,60%,45%)]" />
                   ) : (
                     <IconTrendingDown className="size-4 text-[hsl(0,72%,51%)]" />

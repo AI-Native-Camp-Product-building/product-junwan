@@ -15,7 +15,19 @@ interface PlatformViewProps {
 export function PlatformView({ initialData, filterOptions, platforms }: PlatformViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentPlatform = searchParams.get("platform") ?? "";
+  // KEYWORD: dashboard-platform-query-fallback
+  const currentPlatform = React.useMemo(() => {
+    const explicitPlatform = searchParams.get("platform");
+    if (explicitPlatform) return explicitPlatform;
+
+    const countryFilters = searchParams
+      .get("countries")
+      ?.split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    return countryFilters?.length === 1 ? countryFilters[0] : "";
+  }, [searchParams]);
 
   const filteredData = React.useMemo(() => {
     if (!currentPlatform) return initialData;
@@ -27,11 +39,37 @@ export function PlatformView({ initialData, filterOptions, platforms }: Platform
     return { ...filterOptions, countries: [currentPlatform] };
   }, [filterOptions, currentPlatform]);
 
+  const lockedFilters = React.useMemo(
+    () => (currentPlatform ? { countries: [currentPlatform] } : undefined),
+    [currentPlatform],
+  );
+
+  const initialFilters = React.useMemo(
+    () => (currentPlatform ? { countries: [currentPlatform] } : undefined),
+    [currentPlatform],
+  );
+
+  const hiddenFilters = React.useMemo(
+    () => ["countries"] as Array<"countries" | "mediums" | "goals">,
+    [],
+  );
+
+  // KEYWORD: dashboard-platform-fixed-filter
   const handleChange = (value: string | null) => {
-    const params = new URLSearchParams();
-    if (value) params.set("platform", value);
-    const qs = params.toString();
-    router.push(qs ? `/dashboard/platform?${qs}` : "/dashboard/platform");
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (value) {
+      params.set("platform", value);
+      params.set("countries", value);
+    } else {
+      params.delete("platform");
+      params.delete("countries");
+    }
+
+    const queryString = params.toString();
+    router.push(
+      queryString ? `/dashboard/platform?${queryString}` : "/dashboard/platform",
+    );
   };
 
   return (
@@ -47,9 +85,26 @@ export function PlatformView({ initialData, filterOptions, platforms }: Platform
             ))}
           </SelectContent>
         </Select>
+        {currentPlatform ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            플랫폼 고정 필터: {currentPlatform}
+          </p>
+        ) : null}
+        {currentPlatform ? (
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            기간, 매체, 목표를 조정하면서 선택한 플랫폼 안에서만 상세 분석합니다.
+          </p>
+        ) : null}
       </div>
       {currentPlatform ? (
-        <DashboardShell key={currentPlatform} initialData={filteredData} filterOptions={adjustedOptions} initialFilters={{ countries: [currentPlatform] }} />
+        <DashboardShell
+          key={currentPlatform}
+          initialData={filteredData}
+          filterOptions={adjustedOptions}
+          initialFilters={initialFilters}
+          hiddenFilters={hiddenFilters}
+          lockedFilters={lockedFilters}
+        />
       ) : (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
           상단에서 플랫폼을 선택하면 해당 플랫폼의 성과 데이터를 확인할 수 있습니다.

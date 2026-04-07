@@ -4,6 +4,7 @@ import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import type { TrendPoint } from "@/types/dashboard";
+import { formatKrw } from "@/lib/format";
 import {
   Card,
   CardAction,
@@ -48,12 +49,6 @@ const CHART_COLORS = [
   "rgba(130,140,165,0.65)",
   "rgba(180,185,195,0.75)",
 ];
-
-function formatKrw(v: number): string {
-  if (v >= 100_000_000) return `₩${(v / 100_000_000).toFixed(1)}억`;
-  if (v >= 10_000) return `₩${(v / 10_000).toFixed(0)}만`;
-  return `₩${v.toLocaleString()}`;
-}
 
 const TAB_CONFIG: Record<
   MetricKey,

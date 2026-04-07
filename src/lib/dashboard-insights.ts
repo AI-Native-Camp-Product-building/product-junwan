@@ -4,21 +4,7 @@
 // =============================================================================
 
 import type { AdRow, Insight } from "@/types/dashboard";
-
-// ---------------------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------------------
-
-function formatKrw(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_0000_0000) return `₩${(value / 1_0000_0000).toFixed(1)}억`;
-  if (abs >= 1_0000) return `₩${(value / 1_0000).toFixed(0)}만`;
-  return `₩${Math.round(value).toLocaleString("ko-KR")}`;
-}
-
-function formatNumber(value: number): string {
-  return Math.round(value).toLocaleString("ko-KR");
-}
+import { formatKrw, formatNumber } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Metric config

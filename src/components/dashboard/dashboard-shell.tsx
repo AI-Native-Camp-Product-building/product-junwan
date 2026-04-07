@@ -13,7 +13,8 @@ import type {
 } from "@/types/dashboard";
 import { IconLink } from "@tabler/icons-react";
 import { FilterBar } from "@/components/dashboard/filter-bar";
-import { KpiCards } from "@/components/dashboard/kpi-cards";
+import { getDefaultDateRangeForMode } from "@/components/dashboard/date-range-picker-refined";
+import { KpiCardsRefined } from "@/components/dashboard/kpi-cards-refined";
 import { ChartSection } from "@/components/dashboard/chart-section";
 import { DashboardDataTable } from "@/components/dashboard/dashboard-data-table";
 import { InsightsPanel } from "@/components/dashboard/insights-panel";
@@ -24,22 +25,50 @@ interface DashboardShellProps {
   filterOptions: FilterOptions;
   /** Optional initial filter overrides (e.g. pre-selecting a country or medium). */
   initialFilters?: Partial<DashboardFilters>;
+  hiddenFilters?: Array<"countries" | "mediums" | "goals">;
+  lockedFilters?: Partial<Pick<DashboardFilters, "countries" | "mediums">>;
+}
+
+function applyLockedFilters(
+  filters: DashboardFilters,
+  lockedFilters?: Partial<Pick<DashboardFilters, "countries" | "mediums">>,
+): DashboardFilters {
+  if (!lockedFilters) {
+    return filters;
+  }
+
+  return {
+    ...filters,
+    countries:
+      lockedFilters.countries && lockedFilters.countries.length > 0
+        ? lockedFilters.countries
+        : filters.countries,
+    mediums:
+      lockedFilters.mediums && lockedFilters.mediums.length > 0
+        ? lockedFilters.mediums
+        : filters.mediums,
+  };
 }
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = React.useState(value);
+  const serialized = JSON.stringify(value);
   React.useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
+    const parsed = JSON.parse(serialized) as T;
+    const timer = setTimeout(() => setDebounced(parsed), delay);
     return () => clearTimeout(timer);
-  }, [value, delay]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serialized, delay]);
   return debounced;
 }
 
+// KEYWORD: dashboard-kpi-summary-client
 /** Compute KPI summary with MoM change. */
 function computeKpiSummary(data: AdRow[]): KpiSummary {
   const adSpend = data.reduce((s, r) => s + r.adSpend, 0);
   const revenue = data.reduce((s, r) => s + r.revenue, 0);
   const signups = data.reduce((s, r) => s + r.signups, 0);
+  const conversions = data.reduce((s, r) => s + r.conversions, 0);
   const roas = adSpend > 0 ? (revenue / adSpend) * 100 : 0;
 
   // Group by month to compute MoM
@@ -55,6 +84,7 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
   let revenueChange = 0;
   let roasChange = 0;
   let signupsChange = 0;
+  let conversionsChange = 0;
 
   if (sortedMonths.length >= 2) {
     const curr = byMonth.get(sortedMonths[sortedMonths.length - 1])!;
@@ -66,26 +96,47 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
     const prevRevenue = prev.reduce((s, r) => s + r.revenue, 0);
     const currSignups = curr.reduce((s, r) => s + r.signups, 0);
     const prevSignups = prev.reduce((s, r) => s + r.signups, 0);
+    const currConversions = curr.reduce((s, r) => s + r.conversions, 0);
+    const prevConversions = prev.reduce((s, r) => s + r.conversions, 0);
     const currRoas = currAdSpend > 0 ? (currRevenue / currAdSpend) * 100 : 0;
     const prevRoas = prevAdSpend > 0 ? (prevRevenue / prevAdSpend) * 100 : 0;
 
     adSpendChange = prevAdSpend > 0 ? ((currAdSpend - prevAdSpend) / prevAdSpend) * 100 : 0;
     revenueChange = prevRevenue > 0 ? ((currRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     signupsChange = prevSignups > 0 ? ((currSignups - prevSignups) / prevSignups) * 100 : 0;
+    conversionsChange = prevConversions > 0 ? ((currConversions - prevConversions) / prevConversions) * 100 : 0;
     roasChange = currRoas - prevRoas; // pp change
   }
 
-  return { adSpend, revenue, roas, signups, adSpendChange, revenueChange, roasChange, signupsChange };
+  return {
+    adSpend,
+    revenue,
+    roas,
+    signups,
+    conversions,
+    adSpendChange,
+    revenueChange,
+    roasChange,
+    signupsChange,
+    conversionsChange,
+  };
 }
 
 type TrendMetric = "adSpend" | "signups" | "revenue" | "roas";
 
-function computeTrendData(data: AdRow[], metric: TrendMetric): TrendPoint[] {
+function computeTrendData(
+  data: AdRow[],
+  metric: TrendMetric,
+  dateMode: DashboardFilters["dateMode"],
+): TrendPoint[] {
   const map = new Map<string, Map<string, { adSpend: number; revenue: number; signups: number }>>();
 
   for (const row of data) {
-    if (!map.has(row.month)) map.set(row.month, new Map());
-    const countryMap = map.get(row.month)!;
+    // KEYWORD: dashboard-trend-period-granularity
+    const periodKey = dateMode === "monthly" ? row.month : (row.date || row.month);
+
+    if (!map.has(periodKey)) map.set(periodKey, new Map());
+    const countryMap = map.get(periodKey)!;
     const existing = countryMap.get(row.country) ?? { adSpend: 0, revenue: 0, signups: 0 };
     existing.adSpend += row.adSpend;
     existing.revenue += row.revenue;
@@ -158,8 +209,8 @@ function readFiltersFromUrl(options: FilterOptions): DashboardFilters | null {
   };
 
   const dateMode = (params.get("mode") as DateMode) ?? "monthly";
-  const start = params.get("start");
-  const end = params.get("end");
+  const start = params.get("start") ?? params.get("startDate");
+  const end = params.get("end") ?? params.get("endDate");
   const dateRange: DateRange | null = start && end ? { startDate: start, endDate: end } : null;
 
   return {
@@ -190,30 +241,86 @@ function syncFiltersToUrl(filters: DashboardFilters) {
   window.history.replaceState(null, "", url);
 }
 
-export function DashboardShell({ initialData, filterOptions, initialFilters }: DashboardShellProps) {
-  const [filters, setFilters] = React.useState<DashboardFilters>({
-    ...DEFAULT_FILTERS,
-    ...initialFilters,
+export function DashboardShell({
+  initialData,
+  filterOptions,
+  initialFilters,
+  hiddenFilters,
+  lockedFilters,
+}: DashboardShellProps) {
+  // KEYWORD: dashboard-latest-data-date
+  const latestDataDate = React.useMemo(() => {
+    const validDates = initialData
+      .map((row) => row.date)
+      .filter((date): date is string => Boolean(date))
+      .sort();
+
+    return validDates[validDates.length - 1];
+  }, [initialData]);
+
+  const [filters, setFilters] = React.useState<DashboardFilters>(() => {
+    const baseFilters: DashboardFilters = {
+      ...DEFAULT_FILTERS,
+      ...initialFilters,
+    };
+
+    if (!baseFilters.dateRange && baseFilters.months.length === 0) {
+      return {
+        ...baseFilters,
+        dateRange: getDefaultDateRangeForMode(
+          baseFilters.dateMode ?? "monthly",
+          latestDataDate,
+        ),
+      };
+    }
+
+    return baseFilters;
   });
   const [data, setData] = React.useState<AdRow[]>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
+  const effectiveFilters = React.useMemo(
+    () => applyLockedFilters(filters, lockedFilters),
+    [filters, lockedFilters],
+  );
 
   // Read URL params only after hydration to avoid SSR/client mismatch
   React.useEffect(() => {
     const urlFilters = readFiltersFromUrl(filterOptions);
-    if (urlFilters) setFilters(urlFilters);
+    // KEYWORD: dashboard-fixed-filter-merge
+    if (urlFilters) {
+      setFilters((currentFilters) => ({
+        ...currentFilters,
+        ...urlFilters,
+        countries:
+          urlFilters.countries.length > 0
+            ? urlFilters.countries
+            : currentFilters.countries,
+        mediums:
+          urlFilters.mediums.length > 0
+            ? urlFilters.mediums
+            : currentFilters.mediums,
+        dateRange:
+          !urlFilters.dateRange && urlFilters.months.length === 0
+            ? currentFilters.dateRange ??
+              getDefaultDateRangeForMode(
+                urlFilters.dateMode ?? currentFilters.dateMode,
+                latestDataDate,
+              )
+            : urlFilters.dateRange,
+      }));
+    }
     setHydrated(true);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterOptions, latestDataDate]);
 
   // Sync filters to URL on change (skip initial hydration sync)
   React.useEffect(() => {
     if (!hydrated) return;
-    syncFiltersToUrl(filters);
-  }, [filters]);
+    syncFiltersToUrl(effectiveFilters);
+  }, [effectiveFilters, hydrated]);
 
-  const debouncedFilters = useDebounce(filters, 300);
+  const debouncedFilters = useDebounce(effectiveFilters, 300);
 
   // Fetch data when filters change (or on initial load)
   React.useEffect(() => {
@@ -242,26 +349,26 @@ export function DashboardShell({ initialData, filterOptions, initialFilters }: D
   const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
 
   const trendData = React.useMemo(() => ({
-    adSpend: computeTrendData(data, "adSpend"),
-    signups: computeTrendData(data, "signups"),
-    revenue: computeTrendData(data, "revenue"),
-    roas: computeTrendData(data, "roas"),
-  }), [data]);
+    adSpend: computeTrendData(data, "adSpend", effectiveFilters.dateMode),
+    signups: computeTrendData(data, "signups", effectiveFilters.dateMode),
+    revenue: computeTrendData(data, "revenue", effectiveFilters.dateMode),
+    roas: computeTrendData(data, "roas", effectiveFilters.dateMode),
+  }), [data, effectiveFilters.dateMode]);
 
-  // Split data into current/previous periods for insights
-  const { currentPeriodData, previousPeriodData } = React.useMemo(() => {
-    const sortedMonths = [...new Set(data.map((r) => r.month))].sort();
-    if (sortedMonths.length < 2) {
-      return { currentPeriodData: data, previousPeriodData: [] as AdRow[] };
-    }
-    const mid = Math.ceil(sortedMonths.length / 2);
-    const currentMonths = new Set(sortedMonths.slice(mid));
-    const previousMonths = new Set(sortedMonths.slice(0, mid));
-    return {
-      currentPeriodData: data.filter((r) => currentMonths.has(r.month)),
-      previousPeriodData: data.filter((r) => previousMonths.has(r.month)),
-    };
-  }, [data]);
+  // KEYWORD: dashboard-insight-period-split
+  // Split data into current/previous periods for insights.
+  const sortedMonths = [...new Set(data.map((r) => r.month))].sort();
+  const mid = Math.ceil(sortedMonths.length / 2);
+  const currentMonths = new Set(sortedMonths.slice(mid));
+  const previousMonths = new Set(sortedMonths.slice(0, mid));
+  const currentPeriodData =
+    sortedMonths.length < 2
+      ? data
+      : data.filter((row) => currentMonths.has(row.month));
+  const previousPeriodData =
+    sortedMonths.length < 2
+      ? ([] as AdRow[])
+      : data.filter((row) => previousMonths.has(row.month));
 
   const activeCountries = React.useMemo(() => {
     const set = new Set(data.map((r) => r.country));
@@ -269,18 +376,6 @@ export function DashboardShell({ initialData, filterOptions, initialFilters }: D
   }, [data]);
 
   // Compute the latest date present in data — used as reference for date picker mode switching
-  const latestDataDate = React.useMemo(() => {
-    if (initialData.length === 0) return undefined;
-    const months = initialData.map((r) => r.month).sort();
-    // month is YYYY-MM format; use last day of the latest month as reference
-    const latest = months[months.length - 1];
-    if (!latest) return undefined;
-    // Return end-of-month as YYYY-MM-DD (e.g. "2026-03" -> "2026-03-31")
-    const [y, m] = latest.split("-").map(Number);
-    const endOfMonth = new Date(y, m, 0); // day 0 of next month = last day of this month
-    return `${y}-${String(m).padStart(2, "0")}-${String(endOfMonth.getDate()).padStart(2, "0")}`;
-  }, [initialData]);
-
   const handleCopyLink = React.useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -304,10 +399,11 @@ export function DashboardShell({ initialData, filterOptions, initialFilters }: D
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
         <div className="flex-1">
           <FilterBar
-            filters={filters}
+            filters={effectiveFilters}
             onFiltersChange={setFilters}
             options={filterOptions}
             latestDataDate={latestDataDate}
+            hiddenFilters={hiddenFilters}
           />
         </div>
         <div className="px-4 lg:px-6 md:pt-0">
@@ -323,13 +419,15 @@ export function DashboardShell({ initialData, filterOptions, initialFilters }: D
           </Button>
         </div>
       </div>
-      <KpiCards summary={kpiSummary} isLoading={isLoading} />
+      {/* KEYWORD: dashboard-shell-main-flow */}
+      <KpiCardsRefined summary={kpiSummary} isLoading={isLoading} />
       <ChartSection
         trendData={trendData}
         mediumSpendData={mediumSpendData}
         countries={activeCountries}
         isLoading={isLoading}
       />
+      <DashboardDataTable data={data} isLoading={isLoading} />
       <InsightsPanel
         currentData={currentPeriodData}
         previousData={previousPeriodData}

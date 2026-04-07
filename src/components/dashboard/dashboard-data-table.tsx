@@ -8,14 +8,18 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
   flexRender,
+  type Column,
   type ColumnDef,
   type SortingState,
   type VisibilityState,
   type ColumnOrderState,
+  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import {
   IconArrowUp,
   IconArrowDown,
+  IconFilter,
+  IconFilterOff,
   IconLayoutColumns,
   IconChevronLeft,
   IconChevronRight,
@@ -24,7 +28,8 @@ import {
   IconFlame,
 } from "@tabler/icons-react";
 
-import { exportToCsv } from "@/lib/csv-export";
+import { exportDashboardRowsToCsv } from "@/lib/dashboard-export";
+import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 
 import type { AdRow } from "@/types/dashboard";
 import {
@@ -57,6 +62,8 @@ interface DashboardDataTableProps {
   isLoading: boolean;
 }
 
+const HEATMAP_COLUMNS = ["adSpend", "impressions", "clicks", "ctr", "signups", "signupCpa", "conversions", "revenue", "roas"] as const;
+
 const COUNTRY_FLAGS: Record<string, string> = {
   "레진 KR": "\u{1F1F0}\u{1F1F7}",
   "봄툰 KR": "\u{1F1F0}\u{1F1F7}",
@@ -70,18 +77,16 @@ const COUNTRY_FLAGS: Record<string, string> = {
   ES: "\u{1F1EA}\u{1F1F8}",
 };
 
-function formatKrw(value: number): string {
-  return `\u{20A9}${new Intl.NumberFormat("ko-KR").format(Math.round(value))}`;
+// KEYWORD: dashboard-table-derived-metrics
+function getConversionCpa(row: AdRow): number {
+  return row.conversions > 0 ? row.adSpend / row.conversions : 0;
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ko-KR").format(Math.round(value));
+function getConversionCvr(row: AdRow): number {
+  return row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0;
 }
 
-function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
+// KEYWORD: dashboard-table-columns
 const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "country",
@@ -101,6 +106,10 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "month",
     header: "월",
+  },
+  {
+    accessorKey: "date",
+    header: "일자",
   },
   {
     accessorKey: "medium",
@@ -185,6 +194,24 @@ const columns: ColumnDef<AdRow>[] = [
     enableHiding: true,
   },
   {
+    id: "conversionCpa",
+    header: "결제 CPA",
+    accessorFn: (row) => getConversionCpa(row),
+    cell: ({ getValue }) => (
+      <span className="tabular-nums">{formatKrw(Number(getValue()))}</span>
+    ),
+    enableHiding: true,
+  },
+  {
+    id: "conversionCvr",
+    header: "결제 CVR",
+    accessorFn: (row) => getConversionCvr(row),
+    cell: ({ getValue }) => (
+      <span className="tabular-nums">{formatPercent(Number(getValue()))}</span>
+    ),
+    enableHiding: true,
+  },
+  {
     accessorKey: "revenue",
     header: "결제금액",
     cell: ({ getValue }) => (
@@ -211,6 +238,21 @@ const columns: ColumnDef<AdRow>[] = [
   },
 ];
 
+/** Inline column filter input. */
+function ColumnFilterInput({ column }: { column: Column<AdRow, unknown> }) {
+  const filterValue = column.getFilterValue();
+
+  return (
+    <Input
+      placeholder="필터..."
+      value={(filterValue as string) ?? ""}
+      onChange={(e) => column.setFilterValue(e.target.value || undefined)}
+      className="h-6 w-full min-w-[60px] max-w-[120px] bg-white/[0.03] border-white/[0.06] text-xs px-1.5"
+      aria-label={`${typeof column.columnDef.header === "string" ? column.columnDef.header : column.id} 필터`}
+    />
+  );
+}
+
 /** Default hidden columns. */
 const DEFAULT_HIDDEN: VisibilityState = {
   goal: false,
@@ -220,6 +262,8 @@ const DEFAULT_HIDDEN: VisibilityState = {
   ctr: false,
   signupCpa: false,
   conversions: false,
+  conversionCpa: false,
+  conversionCvr: true,
 };
 
 export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps) {
@@ -230,6 +274,8 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
     React.useState<VisibilityState>(DEFAULT_HIDDEN);
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [showColumnFilters, setShowColumnFilters] = React.useState(false);
   const [draggedCol, setDraggedCol] = React.useState<string | null>(null);
   const [heatmapEnabled, setHeatmapEnabled] = React.useState(false);
 
@@ -241,11 +287,13 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
       columnVisibility,
       columnOrder,
       globalFilter,
+      columnFilters,
     },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnOrderChange: setColumnOrder,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -254,8 +302,6 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
       pagination: { pageSize: 20 },
     },
   });
-
-  const HEATMAP_COLUMNS = ["adSpend", "impressions", "clicks", "ctr", "signups", "signupCpa", "conversions", "revenue", "roas"] as const;
 
   const columnMinMax = React.useMemo(() => {
     if (!heatmapEnabled || data.length === 0) return null;
@@ -305,6 +351,7 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
         <CardTitle>상세 데이터</CardTitle>
       </CardHeader>
       <CardContent className="px-0">
+        {/* KEYWORD: dashboard-table-toolbar */}
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-4 px-4 pb-4 lg:px-6">
           <Input
@@ -321,12 +368,29 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
             className="gap-1.5"
             onClick={() => {
               const visibleRows = table.getFilteredRowModel().rows.map((r) => r.original);
-              exportToCsv(visibleRows, `adinsight-${new Date().toISOString().slice(0, 10)}.csv`);
+              exportDashboardRowsToCsv(
+                visibleRows,
+                `adinsight-${new Date().toISOString().slice(0, 10)}.csv`,
+              );
             }}
             aria-label="CSV 다운로드"
           >
             <IconDownload className="size-4" />
             CSV
+          </Button>
+          <Button
+            variant={showColumnFilters ? "secondary" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              setShowColumnFilters((v) => !v);
+              if (showColumnFilters) setColumnFilters([]);
+            }}
+            aria-label="컬럼 필터 토글"
+            aria-pressed={showColumnFilters}
+          >
+            {showColumnFilters ? <IconFilterOff className="size-4" /> : <IconFilter className="size-4" />}
+            필터
           </Button>
           <Button
             variant={heatmapEnabled ? "secondary" : "outline"}
@@ -423,6 +487,17 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                   ))}
                 </TableRow>
               ))}
+              {showColumnFilters && (
+                <TableRow className="hover:bg-transparent">
+                  {table.getHeaderGroups()[0]?.headers.map((header) => (
+                    <TableHead key={`filter-${header.id}`} className="py-1">
+                      {header.column.getCanFilter() ? (
+                        <ColumnFilterInput column={header.column} />
+                      ) : null}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              )}
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.length === 0 ? (

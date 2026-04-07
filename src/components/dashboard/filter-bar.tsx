@@ -1,24 +1,30 @@
 "use client";
 
 import * as React from "react";
-import { IconX } from "@tabler/icons-react";
+import { IconRotateClockwise2, IconX } from "@tabler/icons-react";
+
 import type { DashboardFilters, FilterOptions } from "@/types/dashboard";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DateRangePicker } from "@/components/dashboard/date-range-picker";
+import {
+  DateRangePickerRefined,
+  getDefaultDateRangeForMode,
+} from "@/components/dashboard/date-range-picker-refined";
+
+type VisibleFilterKey = "countries" | "mediums" | "goals";
 
 interface FilterBarProps {
   filters: DashboardFilters;
-  onFiltersChange: (filters: DashboardFilters) => void;
+  onFiltersChange: React.Dispatch<React.SetStateAction<DashboardFilters>>;
   options: FilterOptions;
-  /** Latest date with data — forwarded to DateRangePicker for mode switching. */
   latestDataDate?: string;
+  hiddenFilters?: VisibleFilterKey[];
 }
 
 interface MultiSelectFilterProps {
@@ -41,27 +47,37 @@ function MultiSelectFilter({
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const toggleItem = (item: string) => {
-    if (selected.includes(item)) {
-      onSelectionChange(selected.filter((s) => s !== item));
-    } else {
-      onSelectionChange([...selected, item]);
-    }
-  };
-
   const filteredOptions = React.useMemo(() => {
     if (!search.trim()) return options;
-    const q = search.toLowerCase();
-    return options.filter((opt) => opt.toLowerCase().includes(q));
+    const query = search.toLowerCase();
+    return options.filter((option) => option.toLowerCase().includes(query));
   }, [options, search]);
 
-  const displayText =
-    selected.length === 0
-      ? "전체"
-      : `${label} (${selected.length})`;
+  const toggleItem = React.useCallback(
+    (item: string) => {
+      if (selected.includes(item)) {
+        onSelectionChange(selected.filter((value) => value !== item));
+        return;
+      }
+
+      onSelectionChange([...selected, item]);
+    },
+    [onSelectionChange, selected],
+  );
+
+  const triggerLabel =
+    selected.length === 0 ? `${label} 전체` : `${label} (${selected.length})`;
 
   return (
-    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSearch(""); }}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          setSearch("");
+        }
+      }}
+    >
       <PopoverTrigger
         render={
           <Button
@@ -70,167 +86,241 @@ function MultiSelectFilter({
             role="combobox"
             aria-expanded={open}
             aria-label={ariaLabel}
-            className={`${width} justify-between bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px] rounded-[10px] text-sm font-normal text-foreground/80 hover:bg-white/[0.06] hover:border-white/[0.12]`}
+            className={`${width} justify-between rounded-[10px] border-white/[0.08] bg-white/[0.03] text-sm font-normal text-foreground/80 backdrop-blur-[12px] hover:border-white/[0.12] hover:bg-white/[0.06]`}
           />
         }
       >
-        <span className="truncate">{displayText}</span>
-        {selected.length > 0 && (
+        <span className="truncate">{triggerLabel}</span>
+        {selected.length > 0 ? (
           <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
             {selected.length}
           </Badge>
-        )}
+        ) : null}
       </PopoverTrigger>
       <PopoverContent
-        className="w-[220px] p-0 bg-popover/95 backdrop-blur-lg border-white/[0.08]"
+        className="w-[220px] border-white/[0.08] bg-popover/95 p-0 backdrop-blur-lg"
         align="start"
       >
         <div className="flex flex-col">
           <input
             type="text"
-            placeholder={`${label} 검색...`}
+            placeholder={`${label} 검색`}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-2 text-sm bg-transparent border-b border-white/[0.06] outline-none placeholder:text-muted-foreground/50"
+            onChange={(event) => setSearch(event.target.value)}
+            className="border-b border-white/[0.06] bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/50"
           />
           <div className="max-h-[200px] overflow-y-auto p-1">
             {filteredOptions.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">결과 없음</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                검색 결과가 없습니다
+              </p>
             ) : (
               filteredOptions.map((option) => {
                 const isSelected = selected.includes(option);
+
                 return (
                   <button
                     key={option}
                     type="button"
                     onClick={() => toggleItem(option)}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/[0.06] transition-colors"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-white/[0.06]"
                   >
                     <Checkbox
                       checked={isSelected}
                       className="pointer-events-none"
                     />
-                    <span className={isSelected ? "text-foreground" : "text-foreground/70"}>{option}</span>
+                    <span
+                      className={
+                        isSelected ? "text-foreground" : "text-foreground/70"
+                      }
+                    >
+                      {option}
+                    </span>
                   </button>
                 );
               })
             )}
           </div>
-          {selected.length > 0 && (
+          {selected.length > 0 ? (
             <button
               type="button"
               onClick={() => onSelectionChange([])}
-              className="border-t border-white/[0.06] px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="border-t border-white/[0.06] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               선택 해제
             </button>
-          )}
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>
   );
 }
 
-function buildFilterSummary(filters: DashboardFilters): string {
+function buildFilterSummary(
+  filters: DashboardFilters,
+  hiddenFilters: Set<VisibleFilterKey>,
+): string {
   const parts: string[] = [];
-  if (filters.countries.length > 0) parts.push(filters.countries.join(", "));
+
+  if (!hiddenFilters.has("countries") && filters.countries.length > 0) {
+    parts.push(filters.countries.join(", "));
+  }
+
   if (filters.dateRange) {
     const { startDate, endDate } = filters.dateRange;
-    if (startDate === endDate) {
-      parts.push(startDate);
-    } else {
-      parts.push(`${startDate} ~ ${endDate}`);
-    }
+    parts.push(startDate === endDate ? startDate : `${startDate} ~ ${endDate}`);
   } else if (filters.months.length > 0) {
-    const sorted = [...filters.months].sort();
-    if (sorted.length === 1) {
-      parts.push(sorted[0]);
-    } else {
-      parts.push(`${sorted[0]}~${sorted[sorted.length - 1]}`);
-    }
+    const sortedMonths = [...filters.months].sort();
+    parts.push(
+      sortedMonths.length === 1
+        ? sortedMonths[0]
+        : `${sortedMonths[0]} ~ ${sortedMonths[sortedMonths.length - 1]}`,
+    );
   }
-  if (filters.mediums.length > 0) parts.push(filters.mediums.join(", "));
-  if (filters.goals.length > 0) parts.push(filters.goals.join(", "));
+
+  if (!hiddenFilters.has("mediums") && filters.mediums.length > 0) {
+    parts.push(filters.mediums.join(", "));
+  }
+
+  if (!hiddenFilters.has("goals") && filters.goals.length > 0) {
+    parts.push(filters.goals.join(", "));
+  }
+
   return parts.length > 0 ? parts.join(" / ") : "전체 데이터";
 }
 
-export function FilterBar({ filters, onFiltersChange, options, latestDataDate }: FilterBarProps) {
+export function FilterBar({
+  filters,
+  onFiltersChange,
+  options,
+  latestDataDate,
+  hiddenFilters = [],
+}: FilterBarProps) {
+  const hiddenFilterSet = React.useMemo(() => new Set(hiddenFilters), [hiddenFilters]);
   const hasActiveFilters =
-    filters.countries.length > 0 ||
+    (!hiddenFilterSet.has("countries") && filters.countries.length > 0) ||
     filters.months.length > 0 ||
-    filters.mediums.length > 0 ||
-    filters.goals.length > 0 ||
+    (!hiddenFilterSet.has("mediums") && filters.mediums.length > 0) ||
+    (!hiddenFilterSet.has("goals") && filters.goals.length > 0) ||
     filters.dateRange !== null;
 
-  const filterSummary = buildFilterSummary(filters);
+  const filterSummary = React.useMemo(
+    () => buildFilterSummary(filters, hiddenFilterSet),
+    [filters, hiddenFilterSet],
+  );
 
-  const resetFilters = () => {
-    onFiltersChange({
+  // KEYWORD: dashboard-filter-state-update
+  const updateArrayFilter = React.useCallback(
+    (key: VisibleFilterKey, value: string[]) => {
+      onFiltersChange((current) => ({
+        ...current,
+        [key]: value,
+      }));
+    },
+    [onFiltersChange],
+  );
+
+  // KEYWORD: dashboard-filter-date-sync
+  const handleModeChange = React.useCallback(
+    (dateMode: DashboardFilters["dateMode"]) => {
+      onFiltersChange((current) => ({
+        ...current,
+        dateMode,
+      }));
+    },
+    [onFiltersChange],
+  );
+
+  const handleDateRangeChange = React.useCallback(
+    (dateRange: DashboardFilters["dateRange"]) => {
+      onFiltersChange((current) => ({
+        ...current,
+        months: [],
+        dateRange,
+      }));
+    },
+    [onFiltersChange],
+  );
+
+  const resetFilters = React.useCallback(() => {
+    onFiltersChange((current) => ({
+      ...current,
       countries: [],
       months: [],
       mediums: [],
       goals: [],
       dateMode: "monthly",
-      dateRange: null,
-    });
-  };
+      dateRange: getDefaultDateRangeForMode("monthly", latestDataDate),
+    }));
+  }, [latestDataDate, onFiltersChange]);
 
   return (
     <div className="flex flex-col gap-3 px-4 lg:px-6">
-      {/* Date range picker — spans full width on mobile */}
-      <DateRangePicker
+      <DateRangePickerRefined
         mode={filters.dateMode ?? "monthly"}
-        onModeChange={(dateMode) => onFiltersChange({ ...filters, dateMode })}
+        onModeChange={handleModeChange}
         value={filters.dateRange ?? null}
-        onChange={(dateRange) => onFiltersChange({ ...filters, dateRange })}
+        onChange={handleDateRangeChange}
         latestDataDate={latestDataDate}
       />
 
-      {/* Other filters row */}
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-        <MultiSelectFilter
-          label="국가"
-          ariaLabel="국가 선택"
-          options={options.countries}
-          selected={filters.countries}
-          onSelectionChange={(countries) =>
-            onFiltersChange({ ...filters, countries })
-          }
-          width="w-full md:w-[180px]"
-        />
-        <MultiSelectFilter
-          label="매체"
-          ariaLabel="매체 선택"
-          options={options.mediums}
-          selected={filters.mediums}
-          onSelectionChange={(mediums) =>
-            onFiltersChange({ ...filters, mediums })
-          }
-          width="w-full md:w-[160px]"
-        />
-        <MultiSelectFilter
-          label="목표"
-          ariaLabel="목표 선택"
-          options={options.goals}
-          selected={filters.goals}
-          onSelectionChange={(goals) =>
-            onFiltersChange({ ...filters, goals })
-          }
-          width="w-full md:w-[140px]"
-        />
-        {hasActiveFilters && (
+        {!hiddenFilterSet.has("countries") ? (
+          <MultiSelectFilter
+            label="플랫폼"
+            ariaLabel="플랫폼 선택"
+            options={options.countries}
+            selected={filters.countries}
+            onSelectionChange={(value) => updateArrayFilter("countries", value)}
+            width="w-full md:w-[180px]"
+          />
+        ) : null}
+        {!hiddenFilterSet.has("mediums") ? (
+          <MultiSelectFilter
+            label="매체"
+            ariaLabel="매체 선택"
+            options={options.mediums}
+            selected={filters.mediums}
+            onSelectionChange={(value) => updateArrayFilter("mediums", value)}
+            width="w-full md:w-[160px]"
+          />
+        ) : null}
+        {!hiddenFilterSet.has("goals") ? (
+          <MultiSelectFilter
+            label="목표"
+            ariaLabel="목표 선택"
+            options={options.goals}
+            selected={filters.goals}
+            onSelectionChange={(value) => updateArrayFilter("goals", value)}
+            width="w-full md:w-[140px]"
+          />
+        ) : null}
+        {hasActiveFilters ? (
           <Button
             variant="ghost"
             size="sm"
             onClick={resetFilters}
-            className="text-muted-foreground hover:text-foreground md:ml-auto"
+            className="gap-1.5 text-muted-foreground hover:text-foreground md:ml-auto"
           >
-            <IconX className="size-3.5" />
-            초기화
+            <IconRotateClockwise2 className="size-3.5" />
+            필터 초기화
           </Button>
+        ) : (
+          <div className="md:ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="gap-1.5 text-muted-foreground/50"
+            >
+              <IconX className="size-3.5" />
+              필터 없음
+            </Button>
+          </div>
         )}
       </div>
-      <p className="text-xs text-muted-foreground/70 truncate" aria-live="polite">
+
+      <p className="truncate text-xs text-muted-foreground/70" aria-live="polite">
         {filterSummary}
       </p>
     </div>

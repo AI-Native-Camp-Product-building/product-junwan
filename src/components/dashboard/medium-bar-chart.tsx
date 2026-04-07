@@ -4,6 +4,7 @@ import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import type { MediumSpendPoint } from "@/types/dashboard";
+import { formatKrw, formatPercent } from "@/lib/format";
 import {
   Card,
   CardAction,
@@ -41,10 +42,8 @@ const chartConfig: ChartConfig = {
 };
 
 function formatBarValue(value: number, metric: MetricKey): string {
-  if (metric === "roas") return `${value.toFixed(1)}%`;
-  if (value >= 1_0000_0000) return `₩${(value / 1_0000_0000).toFixed(1)}억`;
-  if (value >= 1_0000) return `₩${(value / 1_0000).toFixed(0)}만`;
-  return `₩${new Intl.NumberFormat("ko-KR").format(Math.round(value))}`;
+  if (metric === "roas") return formatPercent(value);
+  return formatKrw(value);
 }
 
 export function MediumBarChart({ data, isLoading }: MediumBarChartProps) {

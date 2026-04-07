@@ -13,6 +13,7 @@ import type { AdRow, DashboardFilters } from "@/types/dashboard";
 // ---------------------------------------------------------------------------
 
 const MONTH_REGEX = /^\d{4}-\d{2}$/;
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseCommaSeparated(value: string | null): string[] {
   if (!value) return [];
@@ -44,6 +45,14 @@ function escapeCSV(value: string | number): string {
   return str;
 }
 
+function getConversionCpa(row: AdRow): number {
+  return row.conversions > 0 ? row.adSpend / row.conversions : 0;
+}
+
+function getConversionCvr(row: AdRow): number {
+  return row.clicks > 0 ? (row.conversions / row.clicks) * 100 : 0;
+}
+
 // ---------------------------------------------------------------------------
 // CSV Column Definitions
 // ---------------------------------------------------------------------------
@@ -53,6 +62,7 @@ interface CSVColumn {
   accessor: (row: AdRow) => string | number;
 }
 
+// KEYWORD: dashboard-export-date-range
 const CSV_COLUMNS: CSVColumn[] = [
   { header: "국가", accessor: (r) => r.country },
   { header: "월", accessor: (r) => r.month },
@@ -71,6 +81,8 @@ const CSV_COLUMNS: CSVColumn[] = [
   { header: "가입CPA", accessor: (r) => r.signupCpa },
   { header: "결제전환", accessor: (r) => r.conversions },
   { header: "결제금액(KRW)", accessor: (r) => r.revenue },
+  { header: "결제 CPA", accessor: (r) => getConversionCpa(r) },
+  { header: "결제 CVR", accessor: (r) => getConversionCvr(r) },
   { header: "ROAS", accessor: (r) => r.roas },
 ];
 
@@ -89,7 +101,9 @@ function generateFilename(filters: DashboardFilters): string {
     parts.push(filters.mediums.join("_"));
   }
 
-  if (filters.months.length > 0) {
+  if (filters.startDate && filters.endDate) {
+    parts.push(`${filters.startDate}~${filters.endDate}`);
+  } else if (filters.months.length > 0) {
     const sorted = [...filters.months].sort();
     if (sorted.length === 1) {
       parts.push(sorted[0]);
@@ -119,6 +133,8 @@ export async function GET(request: NextRequest) {
     const months = parseCommaSeparated(searchParams.get("months"));
     const mediums = parseCommaSeparated(searchParams.get("mediums"));
     const goals = parseCommaSeparated(searchParams.get("goals"));
+    const startDate = searchParams.get("startDate") ?? undefined;
+    const endDate = searchParams.get("endDate") ?? undefined;
 
     // Validate months
     if (months.length > 0) {
@@ -131,7 +147,44 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const filters: DashboardFilters = { countries, months, mediums, goals, dateMode: "monthly", dateRange: null };
+    if (startDate && !DATE_REGEX.test(startDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: `Invalid startDate format: '${startDate}'. Expected YYYY-MM-DD.` },
+        { status: 400 },
+      );
+    }
+
+    if (endDate && !DATE_REGEX.test(endDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: `Invalid endDate format: '${endDate}'. Expected YYYY-MM-DD.` },
+        { status: 400 },
+      );
+    }
+
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: "Both startDate and endDate must be provided together." },
+        { status: 400 },
+      );
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+      return NextResponse.json(
+        { error: "InvalidParams", message: "startDate must be before or equal to endDate." },
+        { status: 400 },
+      );
+    }
+
+    const filters: DashboardFilters = {
+      countries,
+      months,
+      mediums,
+      goals,
+      dateMode: "monthly",
+      dateRange: null,
+      startDate,
+      endDate,
+    };
     const { data } = await fetchDashboardData(filters);
 
     // Build CSV content

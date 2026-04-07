@@ -260,7 +260,10 @@ select
   end                                                 as month,
 
   -- Parse date_raw to proper date; null if unparseable
-  r.date_raw::date                                    as ad_date,
+  case
+    when r.date_raw ~ '^\d{4}-\d{2}-\d{2}$' then r.date_raw::date
+    else null
+  end                                                 as ad_date,
 
   -- Normalised dimensions (fall back to raw value if no mapping exists)
   coalesce(mm.normalized, r.medium_raw)               as medium,

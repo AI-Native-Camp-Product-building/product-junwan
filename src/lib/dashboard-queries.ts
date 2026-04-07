@@ -39,12 +39,12 @@ function mapRow(row: Record<string, unknown>): AdRow {
     currency: String(row.currency_local ?? "KRW"),
     impressions: num(row.impressions),
     clicks: num(row.clicks),
-    ctr: num(row.ctr),
+    ctr: num(row.ctr) * 100,
     signups: num(row.signups),
     signupCpa: num(row.signup_cpa),
     conversions: num(row.conversions),
     revenue: row.revenue_krw != null ? num(row.revenue_krw) : num(row.revenue_local),
-    roas: num(row.roas),
+    roas: num(row.roas) * 100,
   };
 }
 
@@ -222,6 +222,7 @@ export function computeKpiSummary(
   currentData: AdRow[],
   previousData: AdRow[],
 ): KpiSummary {
+  // KEYWORD: dashboard-kpi-summary-server
   const sumField = (rows: AdRow[], field: keyof AdRow): number =>
     rows.reduce((acc, row) => acc + num(row[field]), 0);
 
@@ -230,11 +231,13 @@ export function computeKpiSummary(
   const currentRoas =
     currentAdSpend > 0 ? (currentRevenue / currentAdSpend) * 100 : 0;
   const currentSignups = sumField(currentData, "signups");
+  const currentConversions = sumField(currentData, "conversions");
 
   const prevAdSpend = sumField(previousData, "adSpend");
   const prevRevenue = sumField(previousData, "revenue");
   const prevRoas = prevAdSpend > 0 ? (prevRevenue / prevAdSpend) * 100 : 0;
   const prevSignups = sumField(previousData, "signups");
+  const prevConversions = sumField(previousData, "conversions");
 
   const change = (current: number, previous: number): number => {
     if (previous === 0) return 0;
@@ -246,9 +249,11 @@ export function computeKpiSummary(
     revenue: currentRevenue,
     roas: currentRoas,
     signups: currentSignups,
+    conversions: currentConversions,
     adSpendChange: change(currentAdSpend, prevAdSpend),
     revenueChange: change(currentRevenue, prevRevenue),
     roasChange: change(currentRoas, prevRoas),
     signupsChange: change(currentSignups, prevSignups),
+    conversionsChange: change(currentConversions, prevConversions),
   };
 }

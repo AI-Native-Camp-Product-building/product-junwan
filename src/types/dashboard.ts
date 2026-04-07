@@ -30,7 +30,7 @@ export interface AdRow {
   roas: number; // percentage
 }
 
-export type DateMode = "weekly" | "monthly" | "custom";
+export type DateMode = "daily" | "weekly" | "monthly" | "custom";
 
 export interface DateRange {
   startDate: string; // ISO "YYYY-MM-DD"
@@ -59,10 +59,12 @@ export interface KpiSummary {
   revenue: number;
   roas: number;
   signups: number;
+  conversions: number;
   adSpendChange: number; // MoM % change
   revenueChange: number;
   roasChange: number;
   signupsChange: number;
+  conversionsChange: number;
 }
 
 /**

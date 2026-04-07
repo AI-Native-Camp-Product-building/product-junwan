@@ -1,0 +1,1520 @@
+{
+  "scanTimestamp": "2026-04-02T09:19:59.011Z",
+  "results": [
+    {
+      "name": "레진 KR",
+      "sheetId": "1HMyzye86YxhgdZ0bG1vYHb7QeJBi-oI_CGYacxXh2hE",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1",
+        "피봇 테이블 1",
+        "피봇 테이블 1(수정)",
+        "시트3"
+      ],
+      "tabMatch": true,
+      "headerRow": 11,
+      "currency": "KRW",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 200,
+      "totalRowsInSheet": 211,
+      "uniqueMediums": [
+        "메타",
+        "유튜브"
+      ],
+      "uniqueGoals": [
+        "가입&결제",
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "영상(FB)",
+        "영상(한익게)"
+      ],
+      "monthSamples": [
+        "2026-01"
+      ],
+      "dateSamples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03",
+        "2026-01-04",
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08",
+        "2026-01-09",
+        "2026-01-10"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-01",
+        "latest": "2026-01-15"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "2020",
+          "광고비": "197,964",
+          "원화": "197,964",
+          "노출수": "9,984",
+          "클릭": "519",
+          "CTR": "5.20%",
+          "회원가입": "2",
+          "가입CPA": "98,982",
+          "결제전환": "56",
+          "결제금액": "735,072",
+          "ROAS": "371%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "더셀",
+          "광고비": "192,119",
+          "원화": "192,119",
+          "노출수": "13,301",
+          "클릭": "1,389",
+          "CTR": "10.44%",
+          "회원가입": "28",
+          "가입CPA": "6,861",
+          "결제전환": "53",
+          "결제금액": "690,383",
+          "ROAS": "359%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "백라이트",
+          "광고비": "571,871",
+          "원화": "571,871",
+          "노출수": "24,598",
+          "클릭": "2,208",
+          "CTR": "8.98%",
+          "회원가입": "7",
+          "가입CPA": "81,696",
+          "결제전환": "141",
+          "결제금액": "1,673,800",
+          "ROAS": "293%"
+        }
+      ]
+    },
+    {
+      "name": "봄툰 KR",
+      "sheetId": "1rr45aW4SP3Dqwd6grMVpDZohNw0RXfXtjWbfKXEUouU",
+      "configuredTabName": "봄툰KR",
+      "actualTabs": [
+        "봄툰KR",
+        "피봇 테이블 1",
+        "소재 종류"
+      ],
+      "tabMatch": true,
+      "headerRow": 10,
+      "currency": "KRW",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 200,
+      "totalRowsInSheet": 210,
+      "uniqueMediums": [
+        "메타",
+        "유튜브",
+        "트위터",
+        "핀터레스트"
+      ],
+      "uniqueGoals": [
+        "가입",
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "영상(바이럴)",
+        "영상(한익게)"
+      ],
+      "monthSamples": [
+        "2026년 1월"
+      ],
+      "dateSamples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03",
+        "2026-01-04",
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-01",
+        "latest": "2026-01-08"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026년 1월",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "가입",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "스페이스 바니",
+          "광고비": "9,679",
+          "원화": ".",
+          "노출수": "1,242",
+          "클릭": "49",
+          "CTR": "3.9%",
+          "회원가입": "1",
+          "가입CPA": "9,679",
+          "결제전환": ".",
+          "결제금액": ".",
+          "ROAS": "."
+        },
+        {
+          "월별": "2026년 1월",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "교수 탐구 일지",
+          "광고비": "194,947",
+          "원화": ".",
+          "노출수": "21,265",
+          "클릭": "743",
+          "CTR": "3.5%",
+          "회원가입": "29",
+          "가입CPA": "6,722",
+          "결제전환": "65",
+          "결제금액": "578,800",
+          "ROAS": "297%"
+        },
+        {
+          "월별": "2026년 1월",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(한익게)",
+          "소재 (작품명)": "너는 나의 세상",
+          "광고비": "85,537",
+          "원화": ".",
+          "노출수": "8,593",
+          "클릭": "337",
+          "CTR": "3.9%",
+          "회원가입": "6",
+          "가입CPA": "14,256",
+          "결제전환": "20",
+          "결제금액": "201,000",
+          "ROAS": "235%"
+        }
+      ]
+    },
+    {
+      "name": "US",
+      "sheetId": "1xGGd_TY6iFCiyqEoVwMrYzACfpcBMSc8hnBd_qN6vjg",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1",
+        "피봇 테이블 1"
+      ],
+      "tabMatch": true,
+      "headerRow": 11,
+      "currency": "USD",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비(USD)",
+        "광고비(KRW)",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액(USD)",
+        "결제금액(KRW)",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비(USD)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "광고비(KRW)"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액(USD)"
+        },
+        "revenue_krw": {
+          "index": 15,
+          "matchedHeader": "결제금액(KRW)"
+        },
+        "roas_raw": {
+          "index": 16,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "17/17",
+      "dataRowCount": 200,
+      "totalRowsInSheet": 211,
+      "uniqueMediums": [
+        "Facebook",
+        "Pinterest",
+        "TikTok Ads"
+      ],
+      "uniqueGoals": [
+        "가입",
+        "구매"
+      ],
+      "uniqueCreativeTypes": [
+        "한익게"
+      ],
+      "monthSamples": [
+        "2026-01"
+      ],
+      "dateSamples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03",
+        "2026-01-04",
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08",
+        "2026-01-09",
+        "2026-01-10"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-01",
+        "latest": "2026-01-15"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Facebook",
+          "목표": "구매",
+          "소재종류": "한익게",
+          "소재 (작품명)": "신결",
+          "광고비(USD)": "43.14",
+          "광고비(KRW)": "62,834",
+          "노출수": "5120",
+          "클릭": "183",
+          "CTR": "3.57%",
+          "회원가입": "4",
+          "가입CPA": "15,708",
+          "결제전환": "0",
+          "결제금액(USD)": "0",
+          "결제금액(KRW)": "0",
+          "ROAS": "0.00%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Facebook",
+          "목표": "구매",
+          "소재종류": "한익게",
+          "소재 (작품명)": "조개소년 : 발화",
+          "광고비(USD)": "52.82",
+          "광고비(KRW)": "76,933",
+          "노출수": "5342",
+          "클릭": "235",
+          "CTR": "4.40%",
+          "회원가입": "4",
+          "가입CPA": "19,233",
+          "결제전환": "7",
+          "결제금액(USD)": "67.93",
+          "결제금액(KRW)": "98,941",
+          "ROAS": "128.61%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Facebook",
+          "목표": "구매",
+          "소재종류": "한익게",
+          "소재 (작품명)": "해빙곡선",
+          "광고비(USD)": "109.33",
+          "광고비(KRW)": "159,240",
+          "노출수": "9472",
+          "클릭": "301",
+          "CTR": "3.18%",
+          "회원가입": "10",
+          "가입CPA": "15,924",
+          "결제전환": "19",
+          "결제금액(USD)": "318.81",
+          "결제금액(KRW)": "464,350",
+          "ROAS": "291.60%"
+        }
+      ]
+    },
+    {
+      "name": "DE",
+      "sheetId": "1eUMAADMhoRt5eZBq4iyIElgDTGxiPW9LFqyNl0VJ0t0",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1"
+      ],
+      "tabMatch": true,
+      "headerRow": 10,
+      "currency": "EUR",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비(유로)",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비(유로)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 131,
+      "totalRowsInSheet": 141,
+      "uniqueMediums": [
+        "메타"
+      ],
+      "uniqueGoals": [
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "웹툰리뷰",
+        "이미지 (영화자막)"
+      ],
+      "monthSamples": [
+        "2026-01",
+        "2026-02"
+      ],
+      "dateSamples": [
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08",
+        "2026-01-09",
+        "2026-01-10",
+        "2026-01-11",
+        "2026-01-12",
+        "2026-01-13",
+        "2026-01-14"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-05",
+        "latest": "2026-02-18"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-05",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "플라시보",
+          "광고비(유로)": "40.61",
+          "원화": "69,037",
+          "노출수": "1,829",
+          "클릭": "74",
+          "CTR": "4.0%",
+          "회원가입": "",
+          "가입CPA": "-",
+          "결제전환": "7",
+          "결제금액": "95.93",
+          "ROAS": "236%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-05",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "플라시보",
+          "광고비(유로)": "28.68",
+          "원화": "48,756",
+          "노출수": "1,416",
+          "클릭": "50",
+          "CTR": "3.5%",
+          "회원가입": "1",
+          "가입CPA": "28.68",
+          "결제전환": "2",
+          "결제금액": "21.98",
+          "ROAS": "77%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-06",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "플라시보",
+          "광고비(유로)": "21.12",
+          "원화": "35,904",
+          "노출수": "1,220",
+          "클릭": "61",
+          "CTR": "5.0%",
+          "회원가입": "",
+          "가입CPA": "-",
+          "결제전환": "9",
+          "결제금액": "165.91",
+          "ROAS": "786%"
+        }
+      ]
+    },
+    {
+      "name": "FR",
+      "sheetId": "1lirrJfP6duAPJB36-ybXR4_tLTFJwPylg6SwdAizc2w",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1",
+        "피봇 테이블 1"
+      ],
+      "tabMatch": true,
+      "headerRow": 12,
+      "currency": "EUR",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "결제금액 원화",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_krw": {
+          "index": 15,
+          "matchedHeader": "결제금액 원화"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 16,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "17/17",
+      "dataRowCount": 200,
+      "totalRowsInSheet": 212,
+      "uniqueMediums": [
+        "Meta",
+        "TikTok Ads"
+      ],
+      "uniqueGoals": [
+        "가입",
+        "구매",
+        "첫결제"
+      ],
+      "uniqueCreativeTypes": [
+        "PV",
+        "그 외 (챌린지 등)"
+      ],
+      "monthSamples": [
+        "2026-01",
+        "2026-02"
+      ],
+      "dateSamples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03",
+        "2026-01-04",
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08",
+        "2026-01-09",
+        "2026-01-10"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-01",
+        "latest": "2026-02-02"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Meta",
+          "목표": "첫결제",
+          "소재종류": "PV ",
+          "소재 (작품명)": "징크스",
+          "광고비": "€9.39",
+          "원화": "₩15,963",
+          "노출수": "848",
+          "클릭": "21",
+          "CTR": "2.48%",
+          "회원가입": "",
+          "가입CPA": "#DIV/0!",
+          "결제전환": "3",
+          "결제금액": "€49.97",
+          "결제금액 원화": "₩84,949",
+          "ROAS": "532%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Meta",
+          "목표": "첫결제",
+          "소재종류": "PV ",
+          "소재 (작품명)": "고스트인더타운",
+          "광고비": "€0.13",
+          "원화": "₩221",
+          "노출수": "29",
+          "클릭": "2",
+          "CTR": "6.90%",
+          "회원가입": "",
+          "가입CPA": "#DIV/0!",
+          "결제전환": "",
+          "결제금액": "",
+          "결제금액 원화": "₩0",
+          "ROAS": "0%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "Meta",
+          "목표": "구매",
+          "소재종류": "PV ",
+          "소재 (작품명)": "고스트인더타운",
+          "광고비": "€41.57",
+          "원화": "₩70,669",
+          "노출수": "4,389",
+          "클릭": "368",
+          "CTR": "8.38%",
+          "회원가입": "",
+          "가입CPA": "#DIV/0!",
+          "결제전환": "27",
+          "결제금액": "€861.73",
+          "결제금액 원화": "₩1,464,941",
+          "ROAS": "2073%"
+        }
+      ]
+    },
+    {
+      "name": "TH",
+      "sheetId": "1CCisdkklYhSFRhEe1HvN-j9U6bWHAINqyEcP1hfnK0U",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1"
+      ],
+      "tabMatch": true,
+      "headerRow": 10,
+      "currency": "THB",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 7,
+      "totalRowsInSheet": 17,
+      "uniqueMediums": [
+        ".",
+        "메타"
+      ],
+      "uniqueGoals": [
+        ".",
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "이미지 (영화자막)"
+      ],
+      "monthSamples": [
+        "2026-01",
+        "."
+      ],
+      "dateSamples": [
+        "2026-01-20",
+        "2026-01-21",
+        "2026-01-22",
+        "2026-01-23",
+        "2026-01-24",
+        "."
+      ],
+      "dateRange": {
+        "earliest": ".",
+        "latest": "2026-01-24"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-20",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "이미지 (영화자막)",
+          "소재 (작품명)": "야화첩",
+          "광고비": "1000",
+          "원화": "68,698",
+          "노출수": "21,123",
+          "클릭": "308",
+          "CTR": "",
+          "회원가입": "1",
+          "가입CPA": "68,698",
+          "결제전환": "7",
+          "결제금액": "61,059",
+          "ROAS": "89%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-21",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "이미지 (영화자막)",
+          "소재 (작품명)": "야화첩",
+          "광고비": ".",
+          "원화": "119,320",
+          "노출수": "49,241",
+          "클릭": "652",
+          "CTR": "",
+          "회원가입": "0",
+          "가입CPA": ".",
+          "결제전환": "15",
+          "결제금액": "151,853",
+          "ROAS": "127%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-22",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "이미지 (영화자막)",
+          "소재 (작품명)": "야화첩",
+          "광고비": ".",
+          "원화": "56,754",
+          "노출수": "28,302",
+          "클릭": "304",
+          "CTR": "",
+          "회원가입": "1",
+          "가입CPA": "56,754",
+          "결제전환": "19",
+          "결제금액": "138,267",
+          "ROAS": "244%"
+        }
+      ]
+    },
+    {
+      "name": "TW",
+      "sheetId": "1zH-WAZyx_DGs9_8KykiVHWN-BCNvmODuTP_ean4cGdc",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1",
+        "피봇 테이블 1"
+      ],
+      "tabMatch": true,
+      "headerRow": 10,
+      "currency": "TWD",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 193,
+      "totalRowsInSheet": 203,
+      "uniqueMediums": [
+        "구글GDN",
+        "메타"
+      ],
+      "uniqueGoals": [
+        "가입",
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "PV",
+        "웹툰리뷰"
+      ],
+      "monthSamples": [
+        "2026-01",
+        "2026-02",
+        "2026-03"
+      ],
+      "dateSamples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03",
+        "2026-01-04",
+        "2026-01-05",
+        "2026-01-06",
+        "2026-01-07",
+        "2026-01-08",
+        "2026-01-09",
+        "2026-01-10"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-01",
+        "latest": "2026-04-01"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "1995 청춘 레포트",
+          "광고비": "54,284",
+          "원화": "54,284",
+          "노출수": "12,392",
+          "클릭": "290",
+          "CTR": "2%",
+          "회원가입": "0",
+          "가입CPA": "-",
+          "결제전환": "8",
+          "결제금액": "241,995",
+          "ROAS": "446%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-01",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "엎질러진 피",
+          "광고비": "67,211",
+          "원화": "67,211",
+          "노출수": "16,988",
+          "클릭": "532",
+          "CTR": "3%",
+          "회원가입": "3",
+          "가입CPA": "22,404",
+          "결제전환": "8",
+          "결제금액": "183,047",
+          "ROAS": "272%"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-02",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "웹툰리뷰",
+          "소재 (작품명)": "엎질러진 피",
+          "광고비": "72,438",
+          "원화": "72,438",
+          "노출수": "12,925",
+          "클릭": "447",
+          "CTR": "3%",
+          "회원가입": "3",
+          "가입CPA": "24,146",
+          "결제전환": "0",
+          "결제금액": "0",
+          "ROAS": "0%"
+        }
+      ]
+    },
+    {
+      "name": "ES",
+      "sheetId": "1V_EpN-LfmKNnIuxJfRf8MJz304uZch4L27D-HCHezbw",
+      "configuredTabName": "시트1",
+      "actualTabs": [
+        "시트1",
+        "피봇 테이블 2"
+      ],
+      "tabMatch": true,
+      "headerRow": 11,
+      "currency": "EUR",
+      "rawHeaders": [
+        "월별",
+        "일자",
+        "매체",
+        "목표",
+        "소재종류",
+        "소재 (작품명)",
+        "광고비",
+        "원화",
+        "노출수",
+        "클릭",
+        "CTR",
+        "회원가입",
+        "가입CPA",
+        "결제전환",
+        "결제금액",
+        "ROAS"
+      ],
+      "headerMapping": {
+        "month_raw": {
+          "index": 0,
+          "matchedHeader": "월별"
+        },
+        "date_raw": {
+          "index": 1,
+          "matchedHeader": "일자"
+        },
+        "medium_raw": {
+          "index": 2,
+          "matchedHeader": "매체"
+        },
+        "goal_raw": {
+          "index": 3,
+          "matchedHeader": "목표"
+        },
+        "creative_type_raw": {
+          "index": 4,
+          "matchedHeader": "소재종류"
+        },
+        "creative_name": {
+          "index": 5,
+          "matchedHeader": "소재 (작품명)"
+        },
+        "ad_spend_krw": {
+          "index": 7,
+          "matchedHeader": "원화"
+        },
+        "ad_spend_local": {
+          "index": 6,
+          "matchedHeader": "광고비"
+        },
+        "impressions": {
+          "index": 8,
+          "matchedHeader": "노출수"
+        },
+        "clicks": {
+          "index": 9,
+          "matchedHeader": "클릭"
+        },
+        "ctr_raw": {
+          "index": 10,
+          "matchedHeader": "CTR"
+        },
+        "signups": {
+          "index": 11,
+          "matchedHeader": "회원가입"
+        },
+        "signup_cpa_raw": {
+          "index": 12,
+          "matchedHeader": "가입CPA"
+        },
+        "conversions": {
+          "index": 13,
+          "matchedHeader": "결제전환"
+        },
+        "revenue_local": {
+          "index": 14,
+          "matchedHeader": "결제금액"
+        },
+        "roas_raw": {
+          "index": 15,
+          "matchedHeader": "ROAS"
+        }
+      },
+      "unmappedHeaders": [],
+      "mappingRate": "16/16",
+      "dataRowCount": 81,
+      "totalRowsInSheet": 92,
+      "uniqueMediums": [
+        "메타"
+      ],
+      "uniqueGoals": [
+        "가입&결제",
+        "결제"
+      ],
+      "uniqueCreativeTypes": [
+        "영상(PV)"
+      ],
+      "monthSamples": [
+        "2026-01",
+        "2026-02",
+        "2026-03"
+      ],
+      "dateSamples": [
+        "2026-01-13",
+        "2026-01-14",
+        "2026-01-15",
+        "2026-01-16",
+        "2026-01-17",
+        "2026-01-18",
+        "2026-01-19",
+        "2026-01-20",
+        "2026-01-21",
+        "2026-01-22"
+      ],
+      "dateRange": {
+        "earliest": "2026-01-13",
+        "latest": "2026-03-31"
+      },
+      "sampleRows": [
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-13",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(PV)",
+          "소재 (작품명)": "징크스",
+          "광고비": "$58.04",
+          "원화": "84,976",
+          "노출수": "23,947",
+          "클릭": "270",
+          "CTR": "1.13%",
+          "회원가입": "0",
+          "가입CPA": "0",
+          "결제전환": "11",
+          "결제금액": "133,116",
+          "ROAS": "157"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-14",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(PV)",
+          "소재 (작품명)": "징크스",
+          "광고비": "$83.35",
+          "원화": "122,758",
+          "노출수": "35,233",
+          "클릭": "435",
+          "CTR": "1.23%",
+          "회원가입": "4",
+          "가입CPA": "30,689",
+          "결제전환": "32",
+          "결제금액": "442,193",
+          "ROAS": "360"
+        },
+        {
+          "월별": "2026-01",
+          "일자": "2026-01-15",
+          "매체": "메타",
+          "목표": "결제",
+          "소재종류": "영상(PV)",
+          "소재 (작품명)": "징크스",
+          "광고비": "$34.92",
+          "원화": "51,594",
+          "노출수": "15,520",
+          "클릭": "187",
+          "CTR": "1.20%",
+          "회원가입": "3",
+          "가입CPA": "17,198",
+          "결제전환": "20",
+          "결제금액": "305,931",
+          "ROAS": "593"
+        }
+      ]
+    }
+  ],
+  "unmappedMediums": [],
+  "unmappedGoals": [],
+  "unmappedCreativeTypes": []
+}

@@ -239,6 +239,17 @@ function parseString(value: unknown): string | null {
   return s === "" ? null : s;
 }
 
+/**
+ * Parses a date_raw cell. Returns null for placeholders like "." that
+ * would fail PostgreSQL date casting in the ad_normalized view.
+ */
+function parseDateString(value: unknown): string | null {
+  const s = parseString(value);
+  if (s == null) return null;
+  // Only accept YYYY-MM-DD format; reject ".", "-", etc.
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+}
+
 // ---------------------------------------------------------------------------
 // Month normalization
 // ---------------------------------------------------------------------------
@@ -295,7 +306,7 @@ export function parseRow(
     sheet_source_id: sheetSourceId,
     sheet_row_number: rowNumber,
     month_raw: normalizeMonth(cell(mapping.month_raw)),
-    date_raw: parseString(cell(mapping.date_raw)),
+    date_raw: parseDateString(cell(mapping.date_raw)),
     medium_raw: parseString(cell(mapping.medium_raw)),
     goal_raw: parseString(cell(mapping.goal_raw)),
     creative_type_raw: parseString(cell(mapping.creative_type_raw)),
