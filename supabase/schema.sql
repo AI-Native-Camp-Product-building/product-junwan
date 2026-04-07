@@ -42,8 +42,8 @@ comment on table public.sheet_source is
   'Registry of Google Sheets that feed ad_raw. Each row = one sheet tab.';
 
 -- Seed the 8 known sheets
--- NOTE: sheet_id values must be configured via environment or Supabase Dashboard.
--- Real Google Sheet IDs are NOT committed to version control.
+-- NOTE: Real sheet IDs are in supabase/schema-local.sql (gitignored).
+-- This file uses placeholders for version control safety.
 insert into public.sheet_source (name, sheet_id, tab_name, header_row, country_code, currency_local) values
   ('레진 KR',  'YOUR_SHEET_ID_HERE', '시트1',    11, 'KR', 'KRW'),
   ('봄툰 KR',  'YOUR_SHEET_ID_HERE', '봄툰KR',  10, 'KR', 'KRW'),

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # credentials
 /credentials/
+
+# local schema with real sheet IDs
+supabase/schema-local.sql
