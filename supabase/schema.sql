@@ -42,15 +42,17 @@ comment on table public.sheet_source is
   'Registry of Google Sheets that feed ad_raw. Each row = one sheet tab.';
 
 -- Seed the 8 known sheets
+-- NOTE: sheet_id values must be configured via environment or Supabase Dashboard.
+-- Real Google Sheet IDs are NOT committed to version control.
 insert into public.sheet_source (name, sheet_id, tab_name, header_row, country_code, currency_local) values
-  ('레진 KR',  '1HMyzye86YxhgdZ0bG1vYHb7QeJBi-oI_CGYacxXh2hE', '시트1',    11, 'KR', 'KRW'),
-  ('봄툰 KR',  '1rr45aW4SP3Dqwd6grMVpDZohNw0RXfXtjWbfKXEUouU', '봄툰KR',  10, 'KR', 'KRW'),
-  ('US',       '1xGGd_TY6iFCiyqEoVwMrYzACfpcBMSc8hnBd_qN6vjg', '시트1',    11, 'US', 'USD'),
-  ('DE',       '1eUMAADMhoRt5eZBq4iyIElgDTGxiPW9LFqyNl0VJ0t0', '시트1',    10, 'DE', 'EUR'),
-  ('FR',       '1lirrJfP6duAPJB36-ybXR4_tLTFJwPylg6SwdAizc2w', '시트1',    12, 'FR', 'EUR'),
-  ('TH',       '1CCisdkklYhSFRhEe1HvN-j9U6bWHAINqyEcP1hfnK0U', '시트1',    10, 'TH', 'THB'),
-  ('TW',       '1zH-WAZyx_DGs9_8KykiVHWN-BCNvmODuTP_ean4cGdc', '시트1',    10, 'TW', 'TWD'),
-  ('ES',       '1V_EpN-LfmKNnIuxJfRf8MJz304uZch4L27D-HCHezbw', '시트1',    11, 'ES', 'EUR')
+  ('레진 KR',  'YOUR_SHEET_ID_HERE', '시트1',    11, 'KR', 'KRW'),
+  ('봄툰 KR',  'YOUR_SHEET_ID_HERE', '봄툰KR',  10, 'KR', 'KRW'),
+  ('US',       'YOUR_SHEET_ID_HERE', '시트1',    11, 'US', 'USD'),
+  ('DE',       'YOUR_SHEET_ID_HERE', '시트1',    10, 'DE', 'EUR'),
+  ('FR',       'YOUR_SHEET_ID_HERE', '시트1',    12, 'FR', 'EUR'),
+  ('TH',       'YOUR_SHEET_ID_HERE', '시트1',    10, 'TH', 'THB'),
+  ('TW',       'YOUR_SHEET_ID_HERE', '시트1',    10, 'TW', 'TWD'),
+  ('ES',       'YOUR_SHEET_ID_HERE', '시트1',    11, 'ES', 'EUR')
 on conflict (name) do nothing;
 
 
