@@ -58,7 +58,7 @@ jobs:
           if [ -f coverage/coverage-summary.json ]; then
             node -e "
               const c = require('./coverage/coverage-summary.json').total;
-              const min = { lines: 70, functions: 70, branches: 65, statements: 70 };
+              const min = { lines: 80, functions: 80, branches: 75, statements: 80 };
               let fail = false;
               for (const [k, v] of Object.entries(min)) {
                 const actual = c[k]?.pct ?? 0;

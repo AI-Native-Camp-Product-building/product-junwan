@@ -159,12 +159,29 @@ GOOGLE_SERVICE_ACCOUNT_PATH       # (선택) SA JSON 경로, 기본: credentials
   → `CASE WHEN sheet_name = '봄툰 KR' THEN ad_spend_local ELSE COALESCE(NULLIF(ad_spend_krw, 0), ad_spend_local) END`
 - CTR/ROAS는 시트에서 비율값(0.18)으로 저장됨 → 프론트에서 ×100 필요
 
+### Performance (vercel-react-best-practices)
+
+- 큰 컴포넌트는 `dynamic(() => import(...))` 으로 lazy load → 초기 번들 최소화
+- `Promise.all()` 로 병렬 fetch 필수 → 직렬 `.then().then()` 체이닝 금지
+- 이미지: `next/image` 사용 필수, width/height 명시, priority는 above-the-fold만
+- 컴포넌트 내 무거운 계산은 `useMemo` / `useCallback` 으로 메모이제이션
+- 리스트 렌더링 시 안정적인 `key` 필수 (index 사용 금지)
+- Server Components에서 데이터 fetch → Client Components에 props로 전달 (Client에서 fetch 최소화)
+- `useEffect` 내에서 파생 상태 계산 금지 → 렌더링 중에 계산하거나 `useMemo` 사용
+- 불필요한 re-render 방지: props에 인라인 객체/함수 전달 금지
+- API Route에서 적절한 `Cache-Control` 헤더 설정 (정적 데이터는 s-maxage + stale-while-revalidate)
+- 서버사이드 집계 우선 → 클라이언트에 raw data 대량 전송 금지
+
 ### 금지된 안티패턴
 
 - `Button asChild` 사용 금지 → `buttonVariants()` 사용 (base-ui 호환)
 - Popover 내 `pointer-events-none` 주의 → 이벤트 전파 차단 유발
 - `navigator.clipboard` 단독 사용 금지 → fallback (execCommand) 포함
 - Supabase `.in()` 필터에 빈 배열 전달 금지 → 조건 스킵 처리 필요
+- `.then().then()` Promise 체이닝 금지 → `async/await` 또는 `Promise.all()` 사용
+- Client Component에서 대량 데이터 fetch 후 클라이언트 집계 금지 → 서버/DB에서 집계
+- `useEffect` 안에서 setState로 파생 상태 계산 금지 → 무한 루프 위험
+- 동기적 `import()` 없는 큰 라이브러리 직접 import 금지 → `next/dynamic` 사용
 
 ### 정기 정리 절차
 
