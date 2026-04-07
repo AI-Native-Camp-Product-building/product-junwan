@@ -234,7 +234,7 @@ export async function syncSingleSheet(
       `[sheets-sync] "${sheetSource.name}": parsed ${parsedRows.length} rows, skipped ${rowsSkipped}.`,
     );
 
-    // Step 5: Upsert into ad_raw (unless dry run)
+    // Step 5: Delete existing rows + insert fresh (unless dry run)
     if (dryRun) {
       return {
         sheetSourceId: sheetSource.id,
@@ -245,6 +245,18 @@ export async function syncSingleSheet(
         rowsSkipped,
         durationMs: Date.now() - start,
       };
+    }
+
+    // Delete stale rows for this sheet before inserting fresh data
+    const { error: deleteError } = await adminClient
+      .from("ad_raw")
+      .delete()
+      .eq("sheet_source_id", sheetSource.id);
+
+    if (deleteError) {
+      console.warn(
+        `[sheets-sync] "${sheetSource.name}": failed to delete old rows — ${deleteError.message}`,
+      );
     }
 
     let hasPartialError = false;

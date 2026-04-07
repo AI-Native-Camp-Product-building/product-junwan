@@ -8,7 +8,9 @@ import {
   IconBuildingStore,
   IconSpeakerphone,
   IconSearch,
+  IconLogout,
 } from "@tabler/icons-react";
+import { useSession, signOut } from "next-auth/react";
 
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -33,6 +35,7 @@ export function DashboardSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
     <Sidebar
@@ -100,6 +103,35 @@ export function DashboardSidebar({
         <div className="mt-auto flex flex-col gap-1 px-2">
           <Separator className="my-2 bg-white/[0.06]" />
           <SyncStatus />
+          {session?.user && (
+            <>
+              <Separator className="my-2 bg-white/[0.06]" />
+              <div className="flex items-center gap-2 px-3 py-2">
+                {session.user.image && (
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="size-6 rounded-full"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-xs font-medium text-white/70">
+                    {session.user.name}
+                  </p>
+                  <p className="truncate text-[10px] text-white/30">
+                    {session.user.email}
+                  </p>
+                </div>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="shrink-0 rounded-md p-1 text-white/30 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
+                  aria-label="로그아웃"
+                >
+                  <IconLogout className="size-4" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </SidebarContent>
     </Sidebar>
