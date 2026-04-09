@@ -171,6 +171,13 @@ export function QuerySentence({
   const [startOpen, setStartOpen] = React.useState(false);
   const [endOpen, setEndOpen] = React.useState(false);
 
+  // End calendar defaults to the same month as the start date
+  const startDateStr = dateRange?.start;
+  const endDefaultMonth = React.useMemo(() => {
+    if (startDateStr) return parseISO(startDateStr);
+    return undefined;
+  }, [startDateStr]);
+
   const formatDateLabel = (iso: string | undefined) => {
     if (!iso) return "날짜 선택";
     return format(parseISO(iso), "yyyy.MM.dd (EEE)", { locale: ko });
@@ -279,6 +286,7 @@ export function QuerySentence({
           <PopoverContent className="w-auto border-white/[0.08] bg-popover/95 p-0 backdrop-blur-lg" align="start">
             <Calendar
               mode="single"
+              defaultMonth={endDefaultMonth}
               selected={dateRange?.end ? parseISO(dateRange.end) : undefined}
               onSelect={(day) => {
                 if (!day) return;

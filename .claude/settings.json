@@ -1,39 +1,12 @@
 {
-  "$schema": "https://claude.ai/code/settings-schema.json",
-  "hooks": {
-    "pre-commit": [
-      "npx lint-staged"
-    ],
-    "post-session": [
-      "bash .claude/hooks/post-session.sh"
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npx vitest*)",
+      "Bash(npx next start*)",
+      "Bash(npm run dev)"
     ]
-  },
-  "automation": {
-    "prettier": {
-      "enabled": true,
-      "onSave": true,
-      "config": {
-        "semi": true,
-        "singleQuote": false,
-        "tabWidth": 2,
-        "trailingComma": "all",
-        "printWidth": 100
-      }
-    },
-    "eslint": {
-      "enabled": true,
-      "fixOnSave": true
-    },
-    "typescript": {
-      "strict": true,
-      "noEmitOnError": true,
-      "checkOnSave": true
-    }
-  },
-  "rules": {
-    "noAnyType": true,
-    "noInlineStyles": false,
-    "preferServerComponents": true,
-    "requireSuspenseBoundary": true
   }
 }

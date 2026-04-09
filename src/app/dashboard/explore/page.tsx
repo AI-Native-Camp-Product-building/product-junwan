@@ -9,40 +9,92 @@ import { QuerySentence } from "@/components/explore/query-sentence";
 import { ComparePanel } from "@/components/explore/compare-panel";
 import { AiQueryInput } from "@/components/explore/ai-query-input";
 import { QueryResultTable, CompareResultTable } from "@/components/explore/query-result-table";
+import { SaveQueryDialog } from "@/components/explore/save-query-dialog";
+import {
+  SavedQueriesPanel,
+  type SavedQueriesPanelHandle,
+} from "@/components/explore/saved-queries-panel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { DimensionKey, MetricKey, FilterCondition } from "@/types/query";
 
 type QueryMode = "manual" | "ai";
+
+/** Parse explore URL params (from dashboard "탐색에서 자세히 보기" links) */
+function parseExploreUrlParams(): Partial<QueryDefinition> | null {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.size === 0) return null;
+
+  const result: Partial<QueryDefinition> = {};
+
+  const dims = sp.get("dims");
+  if (dims) result.dimensions = dims.split(",") as DimensionKey[];
+
+  const metrics = sp.get("metrics");
+  if (metrics) result.metrics = metrics.split(",") as MetricKey[];
+
+  const sortParam = sp.get("sort");
+  if (sortParam) {
+    const [field, dir] = sortParam.split(":");
+    result.sort = { field, direction: (dir as "asc" | "desc") ?? "desc" };
+  }
+
+  const filtersParam = sp.get("filters");
+  if (filtersParam) {
+    try {
+      result.filters = JSON.parse(filtersParam) as FilterCondition[];
+    } catch { /* ignore */ }
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
 
 export default function ExplorePage() {
   const q = useExploreQuery();
   const [mode, setMode] = React.useState<QueryMode>("manual");
-
   const [pendingAutoExecute, setPendingAutoExecute] = React.useState(false);
+  const savedQueriesRef = React.useRef<SavedQueriesPanelHandle>(null);
+
+  // Load query from URL params (from dashboard links)
+  const urlParamsLoaded = React.useRef(false);
+  React.useEffect(() => {
+    if (urlParamsLoaded.current) return;
+    urlParamsLoaded.current = true;
+    const params = parseExploreUrlParams();
+    if (params) {
+      q.loadQuery({
+        dimensions: params.dimensions ?? ["country"],
+        metrics: params.metrics ?? ["ad_spend_krw", "roas"],
+        filters: params.filters ?? [],
+        dateRange: params.dateRange ?? null,
+        sort: params.sort,
+      });
+      setPendingAutoExecute(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAiQuery = React.useCallback(
     (query: QueryDefinition) => {
-      // AI가 생성한 쿼리를 수동 모드 필드에 세팅
-      q.setMetrics(query.metrics);
-      q.setDimensions(query.dimensions);
-      q.setFilters(query.filters);
-      q.setDateRange(query.dateRange);
-      q.setSort(query.sort);
-
-      if (query.compare) {
-        q.setCompareEnabled(true);
-        q.setCompare(query.compare);
-      } else {
-        q.setCompareEnabled(false);
-        q.setCompare(undefined);
-      }
-
-      // 수동 모드로 전환 + 자동 실행 예약
+      q.loadQuery(query);
       setMode("manual");
       setPendingAutoExecute(true);
     },
     [q],
   );
+
+  const handleLoadPreset = React.useCallback(
+    (query: QueryDefinition) => {
+      q.loadQuery(query);
+      setPendingAutoExecute(true);
+    },
+    [q],
+  );
+
+  const handleQuerySaved = React.useCallback(() => {
+    savedQueriesRef.current?.refetch();
+  }, []);
 
   // 상태 반영 후 자동 실행
   React.useEffect(() => {
@@ -89,6 +141,9 @@ export default function ExplorePage() {
       </div>
 
       <div className="flex flex-col gap-4 px-4 lg:px-6">
+        {/* Saved Queries Panel */}
+        <SavedQueriesPanel ref={savedQueriesRef} onLoad={handleLoadPreset} />
+
         {/* AI mode */}
         {mode === "ai" && (
           <AiQueryInput onQueryGenerated={handleAiQuery} />
@@ -127,6 +182,11 @@ export default function ExplorePage() {
             <IconPlayerPlay className="size-4" />
             {q.isLoading ? "실행 중..." : "실행"}
           </Button>
+
+          <SaveQueryDialog
+            query={q.buildQueryDefinition()}
+            onSaved={handleQuerySaved}
+          />
 
           {q.result && !isCompareResult(q.result) && q.result.rows.length > 0 && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {

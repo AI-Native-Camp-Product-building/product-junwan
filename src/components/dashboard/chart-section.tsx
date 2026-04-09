@@ -1,4 +1,5 @@
 import type { TrendPoint, MediumSpendPoint } from "@/types/dashboard";
+import type { ChartGranularity } from "@/components/dashboard/dashboard-shell";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { MediumBarChart } from "@/components/dashboard/medium-bar-chart";
 
@@ -9,6 +10,8 @@ interface ChartSectionProps {
   mediumSpendData: MediumSpendPoint[];
   countries: string[];
   isLoading: boolean;
+  chartGranularity: ChartGranularity;
+  onChartGranularityChange: (g: ChartGranularity) => void;
 }
 
 export function ChartSection({
@@ -16,6 +19,8 @@ export function ChartSection({
   mediumSpendData,
   countries,
   isLoading,
+  chartGranularity,
+  onChartGranularityChange,
 }: ChartSectionProps) {
   const hasNoTrendData = Object.values(trendData).every((arr) => arr.length === 0);
   const isEmpty = hasNoTrendData && mediumSpendData.length === 0;
@@ -38,6 +43,8 @@ export function ChartSection({
           trendData={trendData}
           countries={countries}
           isLoading={isLoading}
+          chartGranularity={chartGranularity}
+          onChartGranularityChange={onChartGranularityChange}
         />
       </div>
       <div className="lg:col-span-3">

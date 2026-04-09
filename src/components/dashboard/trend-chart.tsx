@@ -32,7 +32,10 @@ import {
 } from "@/components/ui/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+import type { ChartGranularity } from "@/components/dashboard/dashboard-shell";
 
 type MetricKey = "adSpend" | "signups" | "revenue" | "roas";
 
@@ -40,6 +43,8 @@ interface TrendChartProps {
   trendData: Record<MetricKey, TrendPoint[]>;
   countries: string[];
   isLoading: boolean;
+  chartGranularity: ChartGranularity;
+  onChartGranularityChange: (g: ChartGranularity) => void;
 }
 
 const CHART_COLORS = [
@@ -85,8 +90,20 @@ const TAB_CONFIG: Record<
   },
 };
 
-export function TrendChart({ trendData, countries, isLoading }: TrendChartProps) {
-  const isMobile = useIsMobile();
+const GRANULARITY_OPTIONS: Array<{ key: ChartGranularity; label: string }> = [
+  { key: "daily", label: "일" },
+  { key: "weekly", label: "주" },
+  { key: "monthly", label: "월" },
+];
+
+export function TrendChart({
+  trendData,
+  countries,
+  isLoading,
+  chartGranularity,
+  onChartGranularityChange,
+}: TrendChartProps) {
+  // useIsMobile removed — not currently used
   const [viewMode, setViewMode] = React.useState("전체");
   const [activeTab, setActiveTab] = React.useState<MetricKey>("adSpend");
 
@@ -191,6 +208,23 @@ export function TrendChart({ trendData, countries, isLoading }: TrendChartProps)
                   <SelectItem value="국가별" className="rounded-lg">국가별</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-0.5 rounded-lg border border-white/[0.08] bg-white/[0.03] p-0.5">
+                {GRANULARITY_OPTIONS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => onChartGranularityChange(key)}
+                    className={cn(
+                      "rounded-md px-2 py-0.5 text-xs font-medium transition-all",
+                      chartGranularity === key
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </CardAction>
         </CardHeader>

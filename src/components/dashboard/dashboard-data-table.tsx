@@ -142,6 +142,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "adSpend",
     header: "광고비",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatKrw(getValue<number>())}</span>
     ),
@@ -149,6 +150,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "impressions",
     header: "노출수",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatNumber(getValue<number>())}</span>
     ),
@@ -157,6 +159,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "clicks",
     header: "클릭",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatNumber(getValue<number>())}</span>
     ),
@@ -165,6 +168,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "ctr",
     header: "CTR",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatPercent(getValue<number>())}</span>
     ),
@@ -173,6 +177,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "signups",
     header: "회원가입",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatNumber(getValue<number>())}</span>
     ),
@@ -180,6 +185,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "signupCpa",
     header: "가입CPA",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatKrw(getValue<number>())}</span>
     ),
@@ -188,6 +194,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "conversions",
     header: "결제전환",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatNumber(getValue<number>())}</span>
     ),
@@ -197,6 +204,7 @@ const columns: ColumnDef<AdRow>[] = [
     id: "conversionCpa",
     header: "결제 CPA",
     accessorFn: (row) => getConversionCpa(row),
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatKrw(Number(getValue()))}</span>
     ),
@@ -206,6 +214,7 @@ const columns: ColumnDef<AdRow>[] = [
     id: "conversionCvr",
     header: "결제 CVR",
     accessorFn: (row) => getConversionCvr(row),
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatPercent(Number(getValue()))}</span>
     ),
@@ -214,6 +223,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "revenue",
     header: "결제금액",
+    sortingFn: "basic",
     cell: ({ getValue }) => (
       <span className="tabular-nums">{formatKrw(getValue<number>())}</span>
     ),
@@ -221,6 +231,7 @@ const columns: ColumnDef<AdRow>[] = [
   {
     accessorKey: "roas",
     header: "ROAS",
+    sortingFn: "basic",
     cell: ({ getValue }) => {
       const roas = getValue<number>();
       return (
@@ -444,8 +455,6 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                     <TableHead
                       key={header.id}
                       className={`whitespace-nowrap select-none ${draggedCol === header.id ? "opacity-50" : ""}`}
-                      draggable
-                      onDragStart={() => setDraggedCol(header.id)}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={() => {
                         if (draggedCol && draggedCol !== header.id) {
@@ -462,10 +471,20 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
                         }
                         setDraggedCol(null);
                       }}
-                      onDragEnd={() => setDraggedCol(null)}
                     >
                       <div className="flex items-center gap-1">
-                        <IconGripVertical className="size-3 text-muted-foreground/40 cursor-grab active:cursor-grabbing shrink-0" />
+                        <span
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggedCol(header.id);
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", header.id);
+                          }}
+                          onDragEnd={() => setDraggedCol(null)}
+                          className="cursor-grab active:cursor-grabbing shrink-0"
+                        >
+                          <IconGripVertical className="size-3 text-muted-foreground/40" />
+                        </span>
                         <button
                           type="button"
                           className="flex items-center gap-1 cursor-pointer"

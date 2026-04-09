@@ -132,3 +132,18 @@ export type QueryResponse = QueryResult | CompareQueryResult;
 export function isCompareResult(result: QueryResponse): result is CompareQueryResult {
   return "base" in result && "compare" in result;
 }
+
+// ---------------------------------------------------------------------------
+// Saved Queries (Presets)
+// ---------------------------------------------------------------------------
+
+export interface SavedQuery {
+  id: number;
+  name: string;
+  description: string | null;
+  query: QueryDefinition;
+  created_by: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}

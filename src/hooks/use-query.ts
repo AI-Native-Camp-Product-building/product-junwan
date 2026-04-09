@@ -10,7 +10,6 @@ import type {
   DateRange,
   CompareConfig,
 } from "@/types/query";
-import { isCompareResult } from "@/types/query";
 
 interface UseQueryState {
   // Query definition
@@ -40,6 +39,8 @@ interface UseQueryActions {
   setCompare: (config: CompareConfig | undefined) => void;
   setSort: (sort: { field: string; direction: "asc" | "desc" } | undefined) => void;
   execute: () => Promise<void>;
+  loadQuery: (query: QueryDefinition) => void;
+  buildQueryDefinition: () => QueryDefinition;
 }
 
 export type UseQueryReturn = UseQueryState & UseQueryActions;
@@ -113,6 +114,35 @@ export function useExploreQuery(): UseQueryReturn {
     }
   }, [dimensions, metrics, filters, dateRange, compareEnabled, compare, sort]);
 
+  const loadQuery = React.useCallback(
+    (query: QueryDefinition) => {
+      setDimensions(query.dimensions);
+      setMetrics(query.metrics);
+      setFilters(query.filters);
+      setDateRange(query.dateRange);
+      setSort(query.sort);
+      if (query.compare) {
+        setCompareEnabled(true);
+        setCompare(query.compare);
+      } else {
+        setCompareEnabled(false);
+        setCompare(undefined);
+      }
+    },
+    [],
+  );
+
+  const buildQueryDefinition = React.useCallback((): QueryDefinition => {
+    return {
+      dimensions,
+      metrics,
+      filters: filters.filter((f) => f.value !== "" && f.value !== undefined),
+      dateRange,
+      compare: compareEnabled ? compare : undefined,
+      sort,
+    };
+  }, [dimensions, metrics, filters, dateRange, compareEnabled, compare, sort]);
+
   return {
     dimensions,
     metrics,
@@ -133,5 +163,7 @@ export function useExploreQuery(): UseQueryReturn {
     setCompare,
     setSort,
     execute,
+    loadQuery,
+    buildQueryDefinition,
   };
 }

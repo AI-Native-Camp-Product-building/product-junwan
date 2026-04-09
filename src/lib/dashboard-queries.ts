@@ -23,8 +23,21 @@ function num(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Resolve ad_spend in KRW: 봄툰 KR uses ad_spend_local (원화 컬럼 오류). */
+function resolveAdSpendKrw(row: Record<string, unknown>): number {
+  const sheetName = String(row.sheet_name ?? "");
+  if (sheetName === "봄툰 KR") {
+    return num(row.ad_spend_local);
+  }
+  const krw = num(row.ad_spend_krw);
+  return krw !== 0 ? krw : num(row.ad_spend_local);
+}
+
 /** Map a raw Supabase row (snake_case) to the frontend AdRow (camelCase). */
 function mapRow(row: Record<string, unknown>): AdRow {
+  const adSpend = resolveAdSpendKrw(row);
+  const revenue = row.revenue_krw != null ? num(row.revenue_krw) : num(row.revenue_local);
+
   return {
     id: String(row.id ?? ""),
     country: String(row.sheet_name ?? ""),
@@ -34,7 +47,7 @@ function mapRow(row: Record<string, unknown>): AdRow {
     goal: String(row.goal ?? ""),
     creativeType: String(row.creative_type ?? ""),
     creativeName: String(row.creative_name ?? ""),
-    adSpend: num(row.ad_spend_krw),
+    adSpend,
     adSpendLocal: num(row.ad_spend_local),
     currency: String(row.currency_local ?? "KRW"),
     impressions: num(row.impressions),
@@ -43,8 +56,8 @@ function mapRow(row: Record<string, unknown>): AdRow {
     signups: num(row.signups),
     signupCpa: num(row.signup_cpa),
     conversions: num(row.conversions),
-    revenue: row.revenue_krw != null ? num(row.revenue_krw) : num(row.revenue_local),
-    roas: num(row.roas) * 100,
+    revenue,
+    roas: adSpend > 0 ? (revenue / adSpend) * 100 : 0,
   };
 }
 

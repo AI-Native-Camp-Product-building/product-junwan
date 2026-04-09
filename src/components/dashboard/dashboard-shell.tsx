@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { startOfWeek, format as fnsFormat } from "date-fns";
 import type {
   AdRow,
   DashboardFilters,
@@ -17,6 +18,10 @@ import { getDefaultDateRangeForMode } from "@/components/dashboard/date-range-pi
 import { KpiCardsRefined } from "@/components/dashboard/kpi-cards-refined";
 import { ChartSection } from "@/components/dashboard/chart-section";
 import { DashboardDataTable } from "@/components/dashboard/dashboard-data-table";
+import { CreativeRanking } from "@/components/dashboard/creative-ranking";
+import { SpendDonutChart } from "@/components/dashboard/spend-donut-chart";
+import { MediumSummaryTable } from "@/components/dashboard/medium-summary-table";
+import { CountrySummaryTable } from "@/components/dashboard/country-summary-table";
 import { InsightsPanel } from "@/components/dashboard/insights-panel";
 import { Button } from "@/components/ui/button";
 
@@ -57,7 +62,7 @@ function useDebounce<T>(value: T, delay: number): T {
     const parsed = JSON.parse(serialized) as T;
     const timer = setTimeout(() => setDebounced(parsed), delay);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [serialized, delay]);
   return debounced;
 }
@@ -123,17 +128,30 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
 }
 
 type TrendMetric = "adSpend" | "signups" | "revenue" | "roas";
+export type ChartGranularity = "daily" | "weekly" | "monthly";
+
+/** Get the period key for a row based on chart granularity */
+function getPeriodKey(row: AdRow, granularity: ChartGranularity): string {
+  if (granularity === "monthly") return row.month;
+  if (granularity === "daily") return row.date || row.month;
+  // weekly: group by week start (Monday)
+  if (row.date) {
+    const weekStart = startOfWeek(new Date(row.date), { weekStartsOn: 1 });
+    return fnsFormat(weekStart, "MM.dd");
+  }
+  return row.month;
+}
 
 function computeTrendData(
   data: AdRow[],
   metric: TrendMetric,
-  dateMode: DashboardFilters["dateMode"],
+  granularity: ChartGranularity,
 ): TrendPoint[] {
   const map = new Map<string, Map<string, { adSpend: number; revenue: number; signups: number }>>();
 
   for (const row of data) {
     // KEYWORD: dashboard-trend-period-granularity
-    const periodKey = dateMode === "monthly" ? row.month : (row.date || row.month);
+    const periodKey = getPeriodKey(row, granularity);
 
     if (!map.has(periodKey)) map.set(periodKey, new Map());
     const countryMap = map.get(periodKey)!;
@@ -280,6 +298,7 @@ export function DashboardShell({
   const [isLoading, setIsLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
+  const [chartGranularity, setChartGranularity] = React.useState<ChartGranularity>("monthly");
   const effectiveFilters = React.useMemo(
     () => applyLockedFilters(filters, lockedFilters),
     [filters, lockedFilters],
@@ -349,11 +368,11 @@ export function DashboardShell({
   const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
 
   const trendData = React.useMemo(() => ({
-    adSpend: computeTrendData(data, "adSpend", effectiveFilters.dateMode),
-    signups: computeTrendData(data, "signups", effectiveFilters.dateMode),
-    revenue: computeTrendData(data, "revenue", effectiveFilters.dateMode),
-    roas: computeTrendData(data, "roas", effectiveFilters.dateMode),
-  }), [data, effectiveFilters.dateMode]);
+    adSpend: computeTrendData(data, "adSpend", chartGranularity),
+    signups: computeTrendData(data, "signups", chartGranularity),
+    revenue: computeTrendData(data, "revenue", chartGranularity),
+    roas: computeTrendData(data, "roas", chartGranularity),
+  }), [data, chartGranularity]);
 
   // KEYWORD: dashboard-insight-period-split
   // Split data into current/previous periods for insights.
@@ -426,7 +445,23 @@ export function DashboardShell({
         mediumSpendData={mediumSpendData}
         countries={activeCountries}
         isLoading={isLoading}
+        chartGranularity={chartGranularity}
+        onChartGranularityChange={setChartGranularity}
       />
+      {/* P1 charts — 매체/국가 요약 + 도넛 + 작품 랭킹 */}
+      <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 lg:px-6">
+        <MediumSummaryTable data={data} isLoading={isLoading} />
+        <CountrySummaryTable data={data} isLoading={isLoading} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-7 lg:px-6">
+        <div className="lg:col-span-4">
+          <CreativeRanking data={data} isLoading={isLoading} />
+        </div>
+        <div className="lg:col-span-3">
+          <SpendDonutChart data={data} isLoading={isLoading} />
+        </div>
+      </div>
+
       <DashboardDataTable data={data} isLoading={isLoading} />
       <InsightsPanel
         currentData={currentPeriodData}

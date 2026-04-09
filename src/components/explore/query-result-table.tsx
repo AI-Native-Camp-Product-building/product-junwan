@@ -10,7 +10,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { IconArrowUp, IconArrowDown, IconPlus, IconX } from "@tabler/icons-react";
-import { DIMENSIONS, DIMENSION_MAP, METRIC_MAP } from "@/config/query-schema";
+import { DIMENSIONS, DIMENSION_MAP, METRIC_MAP, METRICS } from "@/config/query-schema";
 import type { QueryResultRow, CompareQueryResult } from "@/types/query";
 import {
   Table,
@@ -36,6 +36,63 @@ function formatCell(key: string, value: unknown): string {
 function formatChange(value: number): string {
   const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
+}
+
+/** Compute TOTAL row: SUM for base metrics, weighted recalculation for derived. */
+function computeTotalRow(
+  rows: QueryResultRow[],
+  dimensions: string[],
+  metrics: string[],
+): QueryResultRow {
+  const total: QueryResultRow = {};
+
+  // First dimension shows "TOTAL"
+  if (dimensions.length > 0) {
+    total[dimensions[0]] = "TOTAL";
+    for (let i = 1; i < dimensions.length; i++) {
+      total[dimensions[i]] = "";
+    }
+  }
+
+  // Sum all base (non-derived) metrics
+  const sums: Record<string, number> = {};
+  for (const metric of metrics) {
+    sums[metric] = 0;
+  }
+  for (const row of rows) {
+    for (const metric of metrics) {
+      sums[metric] += Number(row[metric] ?? 0);
+    }
+  }
+
+  // For derived metrics, recalculate from base sums
+  for (const metric of metrics) {
+    const meta = METRICS.find((m) => m.key === metric);
+    if (!meta?.derived) {
+      total[metric] = sums[metric];
+      continue;
+    }
+
+    // Derived: recalculate from underlying base sums
+    if (metric === "roas") {
+      const spend = sums["ad_spend_krw"] ?? 0;
+      const rev = sums["revenue_krw"] ?? 0;
+      total[metric] = spend > 0 ? Math.round((rev / spend) * 100 * 100) / 100 : 0;
+    } else if (metric === "ctr") {
+      const clicks = sums["clicks"] ?? 0;
+      const impr = sums["impressions"] ?? 0;
+      total[metric] = impr > 0 ? Math.round((clicks / impr) * 100 * 100) / 100 : 0;
+    } else if (metric === "signup_cpa") {
+      const spend = sums["ad_spend_krw"] ?? 0;
+      const signups = sums["signups"] ?? 0;
+      total[metric] = signups > 0 ? Math.round(spend / signups) : 0;
+    } else {
+      // Fallback: average
+      total[metric] = rows.length > 0 ? Math.round((sums[metric] / rows.length) * 100) / 100 : 0;
+    }
+  }
+
+  return total;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +148,11 @@ export function QueryResultTable({
 
     return cols;
   }, [dimensions, metrics]);
+
+  const totalRow = React.useMemo(
+    () => (rows.length > 0 ? computeTotalRow(rows, dimensions, metrics) : null),
+    [rows, dimensions, metrics],
+  );
 
   const table = useReactTable({
     data: rows,
@@ -185,6 +247,25 @@ export function QueryResultTable({
               </TableRow>
             ))}
           </TableBody>
+          {totalRow && (
+            <tfoot>
+              <TableRow className="border-t-2 border-white/[0.12] bg-white/[0.04] font-semibold">
+                {[...dimensions, ...metrics].map((key) => {
+                  const isDim = dimensions.includes(key);
+                  const val = totalRow[key];
+                  return (
+                    <TableCell key={key} className="whitespace-nowrap">
+                      {isDim ? (
+                        <span className="text-foreground/90">{String(val)}</span>
+                      ) : (
+                        <span className="tabular-nums">{formatCell(key, val)}</span>
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </tfoot>
+          )}
         </Table>
         <div className="px-4 py-2 text-xs text-muted-foreground">
           총 {rows.length}건

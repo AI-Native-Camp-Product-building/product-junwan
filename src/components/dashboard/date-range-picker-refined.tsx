@@ -118,7 +118,6 @@ interface DateRangePickerRefinedProps {
 }
 
 const MODES: Array<{ key: DateMode; label: string }> = [
-  { key: "daily", label: "일별" },
   { key: "weekly", label: "주별" },
   { key: "monthly", label: "월별" },
   { key: "custom", label: "직접설정" },
