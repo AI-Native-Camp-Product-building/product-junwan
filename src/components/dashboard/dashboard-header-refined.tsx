@@ -2,17 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-
-const HEADER_NAV_ITEMS = [
-  { href: "/dashboard", label: "\uD648" },
-  { href: "/dashboard/explore", label: "\uD0D0\uC0C9" },
-  { href: "/dashboard/platform", label: "\uD50C\uB7AB\uD3FC\uBCC4" },
-  { href: "/dashboard/medium", label: "\uB9E4\uCCB4\uBCC4" },
-];
+import { isAdmin } from "@/lib/admin";
 
 function buildHeaderHref(
   searchParams: Pick<URLSearchParams, "get" | "toString">,
@@ -56,6 +51,18 @@ function buildHeaderHref(
 export function DashboardHeaderRefined() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+
+  const HEADER_NAV_ITEMS = [
+    { href: "/dashboard", label: "홈" },
+    { href: "/dashboard/explore", label: "탐색" },
+    { href: "/dashboard/platform", label: "플랫폼별" },
+    { href: "/dashboard/medium", label: "매체별" },
+    {
+      href: "/dashboard/feedback",
+      label: isAdmin(session?.user?.email) ? "피드백 관리" : "피드백",
+    },
+  ];
 
   return (
     <header className="flex min-h-12 shrink-0 items-center gap-2 border-b border-white/[0.06] bg-white/[0.02] px-4 py-2">
