@@ -10,7 +10,48 @@ import type {
   DateRange,
   CompareConfig,
 } from "@/types/query";
-import { DERIVED_METRIC_COMPONENTS } from "@/config/query-schema";
+import { DERIVED_METRIC_COMPONENTS, METRICS } from "@/config/query-schema";
+
+const DERIVED_KEYS = new Set(METRICS.filter((m) => m.derived).map((m) => m.key));
+
+/** 파생 지표 필터를 서버 필터/클라이언트 필터로 분리 */
+function splitFilters(filters: FilterCondition[]): {
+  serverFilters: FilterCondition[];
+  clientFilters: FilterCondition[];
+} {
+  const serverFilters: FilterCondition[] = [];
+  const clientFilters: FilterCondition[] = [];
+  for (const f of filters) {
+    if (DERIVED_KEYS.has(f.field as MetricKey)) {
+      clientFilters.push(f);
+    } else {
+      serverFilters.push(f);
+    }
+  }
+  return { serverFilters, clientFilters };
+}
+
+/** 클라이언트 필터 적용 (파생지표 범위 필터) */
+function applyClientFilters(
+  rows: Record<string, unknown>[],
+  clientFilters: FilterCondition[],
+): Record<string, unknown>[] {
+  if (clientFilters.length === 0) return rows;
+  return rows.filter((row) =>
+    clientFilters.every((f) => {
+      const val = Number(row[f.field] ?? 0);
+      switch (f.operator) {
+        case "gt": return val > Number(f.value);
+        case "gte": return val >= Number(f.value);
+        case "lt": return val < Number(f.value);
+        case "lte": return val <= Number(f.value);
+        case "eq": return val === Number(f.value);
+        case "neq": return val !== Number(f.value);
+        default: return true;
+      }
+    }),
+  );
+}
 
 /** 파생 지표 선택 시 기반 지표 자동 포함 */
 function ensureBaseMetrics(metrics: MetricKey[]): MetricKey[] {
@@ -108,10 +149,13 @@ export function useExploreQuery(): UseQueryReturn {
     setIsLoading(true);
     setError(null);
 
+    const validFilters = filters.filter((f) => f.value !== "" && f.value !== undefined);
+    const { serverFilters, clientFilters } = splitFilters(validFilters);
+
     const query: QueryDefinition = {
       dimensions,
       metrics,
-      filters: filters.filter((f) => f.value !== "" && f.value !== undefined),
+      filters: serverFilters,
       dateRange,
       compare: compareEnabled ? compare : undefined,
       sort,
@@ -130,6 +174,12 @@ export function useExploreQuery(): UseQueryReturn {
       if (!res.ok) {
         setError(data.error ?? "쿼리 실행에 실패했습니다.");
         return;
+      }
+
+      // 파생지표 필터는 클라이언트에서 적용
+      if (clientFilters.length > 0 && data.rows) {
+        data.rows = applyClientFilters(data.rows, clientFilters);
+        data.totalRows = data.rows.length;
       }
 
       setResult(data);
