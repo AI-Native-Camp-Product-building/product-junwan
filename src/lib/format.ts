@@ -9,11 +9,8 @@ export function formatCurrency(value: number, country: Country): string {
   }).format(value);
 }
 
-/** KRW with compact notation: ₩1.2억, ₩350만, ₩12,345 */
+/** KRW full precision: ₩59,277,939 */
 export function formatKrw(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_0000_0000) return `₩${(value / 1_0000_0000).toFixed(1)}억`;
-  if (abs >= 1_0000) return `₩${(value / 1_0000).toFixed(0)}만`;
   return `₩${new Intl.NumberFormat("ko-KR").format(Math.round(value))}`;
 }
 

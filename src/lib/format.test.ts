@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { formatKrw, formatPercent, formatNumber } from "./format";
 
 describe("formatKrw", () => {
-  it("formats billions with 억", () => {
-    expect(formatKrw(150_000_000)).toBe("₩1.5억");
+  it("formats large numbers with full precision", () => {
+    expect(formatKrw(150_000_000)).toBe("₩150,000,000");
   });
 
-  it("formats ten-thousands with 만", () => {
-    expect(formatKrw(50_000)).toBe("₩5만");
+  it("formats ten-thousands with commas", () => {
+    expect(formatKrw(59_277_939)).toBe("₩59,277,939");
   });
 
   it("formats small numbers with comma grouping", () => {
@@ -19,7 +19,7 @@ describe("formatKrw", () => {
   });
 
   it("handles negative values", () => {
-    expect(formatKrw(-200_000_000)).toBe("₩-2.0억");
+    expect(formatKrw(-200_000_000)).toBe("₩-200,000,000");
   });
 });
 
