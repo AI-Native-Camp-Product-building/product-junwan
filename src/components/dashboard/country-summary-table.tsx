@@ -7,6 +7,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 import type { AdRow } from "@/types/dashboard";
 import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 import { buildExploreUrl } from "@/lib/explore-link";
+import { COUNTRY_FLAGS, getHeatmapBg } from "@/lib/constants";
 import {
   Card,
   CardContent,
@@ -24,16 +25,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  "레진 KR": "\u{1F1F0}\u{1F1F7}",
-  "봄툰 KR": "\u{1F1F0}\u{1F1F7}",
-  US: "\u{1F1FA}\u{1F1F8}",
-  DE: "\u{1F1E9}\u{1F1EA}",
-  FR: "\u{1F1EB}\u{1F1F7}",
-  TH: "\u{1F1F9}\u{1F1ED}",
-  TW: "\u{1F1F9}\u{1F1FC}",
-  ES: "\u{1F1EA}\u{1F1F8}",
-};
 
 interface CountrySummaryTableProps {
   data: AdRow[];
@@ -49,7 +40,7 @@ interface CountryAgg {
   roas: number;
 }
 
-const HEATMAP_COLS = ["adSpend", "signups", "conversions", "roas"] as const;
+const HEATMAP_COLS = ["adSpend", "signups", "roas"] as const;
 
 function aggregateByCountry(data: AdRow[]): CountryAgg[] {
   const map = new Map<string, { adSpend: number; revenue: number; signups: number; conversions: number }>();
@@ -74,11 +65,6 @@ function aggregateByCountry(data: AdRow[]): CountryAgg[] {
     .sort((a, b) => b.adSpend - a.adSpend);
 }
 
-function getHeatmapBg(value: number, min: number, max: number): string {
-  if (max === min) return "";
-  const intensity = (value - min) / (max - min);
-  return `hsl(var(--chart-1) / ${(intensity * 0.25).toFixed(3)})`;
-}
 
 const exploreUrl = buildExploreUrl({
   dimensions: ["country"],
@@ -125,9 +111,9 @@ export function CountrySummaryTable({ data, isLoading }: CountrySummaryTableProp
                 <TableHead>국가</TableHead>
                 <TableHead className="text-right">광고비</TableHead>
                 <TableHead className="text-right">ROAS</TableHead>
-                <TableHead className="text-right">가입</TableHead>
-                <TableHead className="text-right">결제전환</TableHead>
+                <TableHead className="text-right">가입자수</TableHead>
                 <TableHead className="text-right">결제금액</TableHead>
+                <TableHead className="text-right">가입 CPA</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -159,14 +145,11 @@ export function CountrySummaryTable({ data, isLoading }: CountrySummaryTableProp
                   >
                     {formatNumber(c.signups)}
                   </TableCell>
-                  <TableCell
-                    className="text-right tabular-nums"
-                    style={{ backgroundColor: getHeatmapBg(c.conversions, minMax.conversions.min, minMax.conversions.max) }}
-                  >
-                    {formatNumber(c.conversions)}
-                  </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatKrw(c.revenue)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {c.signups > 0 ? formatKrw(c.adSpend / c.signups) : "-"}
                   </TableCell>
                 </TableRow>
               ))}

@@ -127,7 +127,7 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
   };
 }
 
-type TrendMetric = "adSpend" | "signups" | "revenue" | "roas";
+type TrendMetric = "adSpend" | "signups" | "revenue" | "roas" | "signupCpa";
 export type ChartGranularity = "daily" | "weekly" | "monthly";
 
 /** Get the period key for a row based on chart granularity */
@@ -372,6 +372,7 @@ export function DashboardShell({
     signups: computeTrendData(data, "signups", chartGranularity),
     revenue: computeTrendData(data, "revenue", chartGranularity),
     roas: computeTrendData(data, "roas", chartGranularity),
+    signupCpa: computeTrendData(data, "signupCpa", chartGranularity),
   }), [data, chartGranularity]);
 
   // KEYWORD: dashboard-insight-period-split

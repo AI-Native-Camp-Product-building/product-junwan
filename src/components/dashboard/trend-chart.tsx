@@ -37,7 +37,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { ChartGranularity } from "@/components/dashboard/dashboard-shell";
 
-type MetricKey = "adSpend" | "signups" | "revenue" | "roas";
+type MetricKey = "adSpend" | "signups" | "revenue" | "roas" | "signupCpa";
 
 interface TrendChartProps {
   trendData: Record<MetricKey, TrendPoint[]>;
@@ -71,13 +71,13 @@ const TAB_CONFIG: Record<
     yTickFormatter: (v) => formatKrw(v),
   },
   signups: {
-    label: "가입",
-    description: "기간별 가입 추이",
+    label: "가입자수",
+    description: "기간별 가입자수 추이",
     formatter: (v) => v.toLocaleString(),
     yTickFormatter: (v) => v.toLocaleString(),
   },
   revenue: {
-    label: "결제",
+    label: "결제금액",
     description: "기간별 결제금액 추이",
     formatter: (v) => formatKrw(v),
     yTickFormatter: (v) => formatKrw(v),
@@ -87,6 +87,12 @@ const TAB_CONFIG: Record<
     description: "기간별 ROAS 추이",
     formatter: (v) => `${v.toFixed(1)}%`,
     yTickFormatter: (v) => `${v.toFixed(0)}%`,
+  },
+  signupCpa: {
+    label: "가입 CPA",
+    description: "기간별 가입 CPA 추이",
+    formatter: (v) => formatKrw(v),
+    yTickFormatter: (v) => formatKrw(v),
   },
 };
 
@@ -135,7 +141,7 @@ export function TrendChart({
       <Card className="@container/card bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px]">
         <CardHeader>
           <CardTitle>성과 추이</CardTitle>
-          <CardDescription>광고비 / 가입 / 결제 / ROAS</CardDescription>
+          <CardDescription>광고비 / 가입자수 / 결제금액 / ROAS / 가입 CPA</CardDescription>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[300px] w-full" />

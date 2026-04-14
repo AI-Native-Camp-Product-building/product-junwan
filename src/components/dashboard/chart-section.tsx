@@ -3,7 +3,7 @@ import type { ChartGranularity } from "@/components/dashboard/dashboard-shell";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { MediumBarChart } from "@/components/dashboard/medium-bar-chart";
 
-type MetricKey = "adSpend" | "signups" | "revenue" | "roas";
+type MetricKey = "adSpend" | "signups" | "revenue" | "roas" | "signupCpa";
 
 interface ChartSectionProps {
   trendData: Record<MetricKey, TrendPoint[]>;
