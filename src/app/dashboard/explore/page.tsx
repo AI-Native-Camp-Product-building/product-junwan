@@ -9,6 +9,7 @@ import { QuerySentence } from "@/components/explore/query-sentence";
 import { ComparePanel } from "@/components/explore/compare-panel";
 import { AiQueryInput } from "@/components/explore/ai-query-input";
 import { QueryResultTable, CompareResultTable } from "@/components/explore/query-result-table";
+import { ExploreChart } from "@/components/explore/explore-chart";
 import { SaveQueryDialog } from "@/components/explore/save-query-dialog";
 import {
   SavedQueriesPanel,
@@ -216,6 +217,41 @@ export default function ExplorePage() {
           <div className="rounded-lg border border-[hsl(0,72%,51%)/0.3] bg-[hsl(0,72%,51%)/0.05] px-4 py-3 text-sm text-[hsl(0,72%,51%)]">
             {q.error}
           </div>
+        )}
+
+        {/* Trend Chart — normal mode */}
+        {q.result && !isCompareResult(q.result) && q.result.rows.length > 0 && (
+          <ExploreChart
+            rows={q.result.rows}
+            dimensions={q.dimensions}
+            metrics={q.metrics}
+          />
+        )}
+
+        {/* Trend Chart — compare mode */}
+        {q.result && isCompareResult(q.result) && (
+          <ExploreChart
+            rows={q.result.base.rows}
+            dimensions={q.dimensions}
+            metrics={q.metrics}
+            isCompare
+            compareBase={q.result.base.rows}
+            compareRows={q.result.compare.rows}
+            baseLabel={
+              q.compare?.type === "period"
+                ? `${q.compare.baseRange.start.slice(5, 7)}월`
+                : q.compare?.type === "item"
+                  ? q.compare.baseValue
+                  : "기준"
+            }
+            compareLabel={
+              q.compare?.type === "period"
+                ? `${q.compare.compareRange.start.slice(5, 7)}월`
+                : q.compare?.type === "item"
+                  ? q.compare.compareValue
+                  : "비교"
+            }
+          />
         )}
 
         {/* Results */}
