@@ -1,0 +1,18 @@
+services:
+  adinsight:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_ADMIN_EMAIL: ${NEXT_PUBLIC_ADMIN_EMAIL}
+    ports:
+      - "1004:1004"
+    env_file:
+      - .env.local
+    environment:
+      - PORT=1004
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - ./credentials:/app/credentials:ro
+    restart: unless-stopped
