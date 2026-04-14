@@ -12,9 +12,9 @@ import type {
 } from "@/types/query";
 import { DERIVED_METRIC_COMPONENTS, METRICS } from "@/config/query-schema";
 
-const DERIVED_KEYS = new Set(METRICS.filter((m) => m.derived).map((m) => m.key));
+const ALL_METRIC_KEYS = new Set(METRICS.map((m) => m.key));
 
-/** 파생 지표 필터를 서버 필터/클라이언트 필터로 분리 */
+/** 지표 필터를 서버에서 제외 → 클라이언트에서 집계 후 적용 */
 function splitFilters(filters: FilterCondition[]): {
   serverFilters: FilterCondition[];
   clientFilters: FilterCondition[];
@@ -22,7 +22,7 @@ function splitFilters(filters: FilterCondition[]): {
   const serverFilters: FilterCondition[] = [];
   const clientFilters: FilterCondition[] = [];
   for (const f of filters) {
-    if (DERIVED_KEYS.has(f.field as MetricKey)) {
+    if (ALL_METRIC_KEYS.has(f.field as MetricKey)) {
       clientFilters.push(f);
     } else {
       serverFilters.push(f);
