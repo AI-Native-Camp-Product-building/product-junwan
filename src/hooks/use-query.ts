@@ -41,6 +41,8 @@ interface UseQueryActions {
   execute: () => Promise<void>;
   loadQuery: (query: QueryDefinition) => void;
   buildQueryDefinition: () => QueryDefinition;
+  addOrUpdateFilter: (field: string, operator: FilterCondition["operator"], value: FilterCondition["value"]) => void;
+  removeFilter: (field: string) => void;
 }
 
 export type UseQueryReturn = UseQueryState & UseQueryActions;
@@ -60,8 +62,12 @@ export function useExploreQuery(): UseQueryReturn {
 
   // Fetch filter options on mount
   React.useEffect(() => {
-    fetch("/api/filters")
-      .then((res) => res.json())
+    const controller = new AbortController();
+    fetch("/api/filters", { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         const map = new Map<string, string[]>();
         if (data.countries) map.set("country", data.countries);
@@ -70,7 +76,10 @@ export function useExploreQuery(): UseQueryReturn {
         if (data.goals) map.set("goal", data.goals);
         setFilterValueOptions(map);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Silenced: abort on unmount or network failure
+      });
+    return () => controller.abort();
   }, []);
 
   const execute = React.useCallback(async () => {
@@ -132,6 +141,29 @@ export function useExploreQuery(): UseQueryReturn {
     [],
   );
 
+  const addOrUpdateFilter = React.useCallback(
+    (field: string, operator: FilterCondition["operator"], value: FilterCondition["value"]) => {
+      setFilters((prev) => {
+        const idx = prev.findIndex((f) => f.field === field);
+        const newFilter: FilterCondition = { field: field as DimensionKey | MetricKey, operator, value };
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = newFilter;
+          return next;
+        }
+        return [...prev, newFilter];
+      });
+    },
+    [],
+  );
+
+  const removeFilter = React.useCallback(
+    (field: string) => {
+      setFilters((prev) => prev.filter((f) => f.field !== field));
+    },
+    [],
+  );
+
   const buildQueryDefinition = React.useCallback((): QueryDefinition => {
     return {
       dimensions,
@@ -165,5 +197,7 @@ export function useExploreQuery(): UseQueryReturn {
     execute,
     loadQuery,
     buildQueryDefinition,
+    addOrUpdateFilter,
+    removeFilter,
   };
 }

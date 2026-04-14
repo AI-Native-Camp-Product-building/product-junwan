@@ -141,3 +141,14 @@ export function validateDimensions(keys: string[]): keys is DimensionKey[] {
 export function validateMetrics(keys: string[]): keys is MetricKey[] {
   return keys.every((k) => METRIC_MAP.has(k as MetricKey));
 }
+
+// ---------------------------------------------------------------------------
+// Derived metric component mapping
+// ---------------------------------------------------------------------------
+
+/** Maps derived metrics to their component base metrics for filtering. */
+export const DERIVED_METRIC_COMPONENTS: Record<string, { label: string; components: MetricKey[] }> = {
+  roas: { label: "ROAS = 결제금액 ÷ 광고비", components: ["revenue_krw", "ad_spend_krw"] },
+  ctr: { label: "CTR = 클릭 ÷ 노출수", components: ["clicks", "impressions"] },
+  signup_cpa: { label: "가입 CPA = 광고비 ÷ 가입수", components: ["ad_spend_krw", "signups"] },
+};
