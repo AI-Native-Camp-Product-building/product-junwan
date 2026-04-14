@@ -230,6 +230,19 @@ export default function ExplorePage() {
               q.setDimensions(dims as typeof q.dimensions);
               setPendingAutoExecute(true);
             }}
+            filters={q.filters}
+            filterValueOptions={q.filterValueOptions}
+            onApplyFilter={(field, op, value) => {
+              q.addOrUpdateFilter(field, op, value);
+              setPendingAutoExecute(true);
+            }}
+            onClearFilter={(field) => {
+              q.removeFilter(field);
+              setPendingAutoExecute(true);
+            }}
+            onSortChange={(field, direction) => {
+              q.setSort({ field, direction });
+            }}
           />
         )}
 

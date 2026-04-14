@@ -11,7 +11,8 @@ import {
 } from "@tanstack/react-table";
 import { IconArrowUp, IconArrowDown, IconPlus, IconX } from "@tabler/icons-react";
 import { DIMENSIONS, DIMENSION_MAP, METRIC_MAP, METRICS } from "@/config/query-schema";
-import type { QueryResultRow, CompareQueryResult } from "@/types/query";
+import type { QueryResultRow, CompareQueryResult, FilterCondition, MetricKey } from "@/types/query";
+import { ColumnFilterPopover } from "@/components/explore/column-filter-popover";
 import {
   Table,
   TableBody,
@@ -96,6 +97,36 @@ function computeTotalRow(
 }
 
 // ---------------------------------------------------------------------------
+// Column filter helpers
+// ---------------------------------------------------------------------------
+
+function getColumnType(key: string, isDimension: boolean): "text" | "number" | "derived" {
+  if (isDimension) return "text";
+  const meta = METRIC_MAP.get(key as MetricKey);
+  if (meta?.derived) return "derived";
+  return "number";
+}
+
+function getAvailableValues(
+  key: string,
+  rows: QueryResultRow[],
+  filterValueOptions?: Map<string, string[]>,
+): string[] {
+  const fromOptions = filterValueOptions?.get(key);
+  if (fromOptions) return fromOptions;
+  const values = new Set<string>();
+  for (const row of rows) {
+    const val = row[key];
+    if (val != null && val !== "") values.add(String(val));
+  }
+  return Array.from(values).sort();
+}
+
+function findFilter(filters: FilterCondition[], field: string): FilterCondition | undefined {
+  return filters.find((f) => f.field === field);
+}
+
+// ---------------------------------------------------------------------------
 // Standard result table
 // ---------------------------------------------------------------------------
 
@@ -107,6 +138,16 @@ interface QueryResultTableProps {
   defaultSort?: { field: string; direction: "asc" | "desc" };
   /** Callback to add/remove a dimension and re-execute the query. */
   onDimensionsChange?: (dimensions: string[]) => void;
+  /** Column filter props — when provided, headers show ColumnFilterPopover. */
+  filters?: FilterCondition[];
+  filterValueOptions?: Map<string, string[]>;
+  onApplyFilter?: (
+    field: string,
+    operator: FilterCondition["operator"],
+    value: FilterCondition["value"],
+  ) => void;
+  onClearFilter?: (field: string) => void;
+  onSortChange?: (field: string, direction: "asc" | "desc") => void;
 }
 
 export function QueryResultTable({
@@ -116,6 +157,11 @@ export function QueryResultTable({
   isLoading,
   defaultSort,
   onDimensionsChange,
+  filters,
+  filterValueOptions,
+  onApplyFilter,
+  onClearFilter,
+  onSortChange,
 }: QueryResultTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSort ? [{ id: defaultSort.field, desc: defaultSort.direction === "desc" }] : [],
@@ -220,19 +266,62 @@ export function QueryResultTable({
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="whitespace-nowrap cursor-pointer select-none"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center gap-1">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === "asc" && <IconArrowUp className="size-3.5" />}
-                      {header.column.getIsSorted() === "desc" && <IconArrowDown className="size-3.5" />}
-                    </div>
-                  </TableHead>
-                ))}
+                {hg.headers.map((header) => {
+                  const colKey = header.column.id;
+                  const isDimension = dimensions.includes(colKey);
+                  const label =
+                    typeof header.column.columnDef.header === "string"
+                      ? header.column.columnDef.header
+                      : (isDimension
+                          ? (DIMENSION_MAP.get(colKey as never)?.label ?? colKey)
+                          : (METRIC_MAP.get(colKey as MetricKey)?.label ?? colKey));
+                  const activeFilter = findFilter(filters ?? [], colKey);
+                  const sortEntry = sorting.find((s) => s.id === colKey);
+                  const sortDirection = sortEntry ? (sortEntry.desc ? "desc" : "asc") : null;
+
+                  return (
+                    <TableHead key={header.id} className="whitespace-nowrap">
+                      {onApplyFilter ? (
+                        <ColumnFilterPopover
+                          columnKey={colKey}
+                          columnLabel={label}
+                          columnType={getColumnType(colKey, isDimension)}
+                          availableValues={
+                            isDimension
+                              ? getAvailableValues(colKey, rows, filterValueOptions)
+                              : undefined
+                          }
+                          currentFilter={activeFilter}
+                          sortDirection={sortDirection}
+                          onApplyFilter={onApplyFilter}
+                          onClearFilter={onClearFilter!}
+                          onSort={(field, dir) => {
+                            setSorting([{ id: field, desc: dir === "desc" }]);
+                            onSortChange?.(field, dir);
+                          }}
+                        >
+                          <div className="flex items-center gap-1 cursor-pointer select-none">
+                            {label}
+                            {activeFilter && (
+                              <span className="size-1.5 rounded-full bg-primary inline-block" />
+                            )}
+                            {sortDirection === "asc" && <IconArrowUp className="size-3.5" />}
+                            {sortDirection === "desc" && <IconArrowDown className="size-3.5" />}
+                          </div>
+                        </ColumnFilterPopover>
+                      ) : (
+                        <div
+                          className="flex items-center gap-1 cursor-pointer select-none"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getIsSorted() === "asc" && <IconArrowUp className="size-3.5" />}
+                          {header.column.getIsSorted() === "desc" && <IconArrowDown className="size-3.5" />}
+                        </div>
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
