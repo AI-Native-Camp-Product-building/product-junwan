@@ -176,12 +176,14 @@ function computeTrendData(
       else if (metric === "signups") point[country] = agg.signups;
       else if (metric === "revenue") point[country] = Math.round(agg.revenue);
       else if (metric === "roas") point[country] = agg.adSpend > 0 ? Math.round((agg.revenue / agg.adSpend) * 100 * 10) / 10 : 0;
+      else if (metric === "signupCpa") point[country] = agg.signups > 0 ? Math.round(agg.adSpend / agg.signups) : 0;
     }
 
     if (metric === "adSpend") point["\uC804\uCCB4"] = Math.round(totalSpend);
     else if (metric === "signups") point["\uC804\uCCB4"] = totalSignups;
     else if (metric === "revenue") point["\uC804\uCCB4"] = Math.round(totalRevenue);
     else if (metric === "roas") point["\uC804\uCCB4"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
+    else if (metric === "signupCpa") point["\uC804\uCCB4"] = totalSignups > 0 ? Math.round(totalSpend / totalSignups) : 0;
 
     result.push(point);
   }
