@@ -160,15 +160,24 @@ function buildCompareChartData(
   const baseMap = aggregate(baseRows);
   const compareMap = aggregate(compareRows);
 
-  const allPeriods = Array.from(
-    new Set([...baseMap.keys(), ...compareMap.keys()])
-  ).sort();
+  // 일차 기준 정규화: 각 기간의 시작일로부터 N일차로 변환
+  const basePeriods = [...baseMap.keys()].sort();
+  const comparePeriods = [...compareMap.keys()].sort();
+  const maxLen = Math.max(basePeriods.length, comparePeriods.length);
 
-  const data: Record<string, unknown>[] = allPeriods.map((period) => ({
-    period,
-    [baseLabel]: baseMap.get(period),
-    [compareLabel]: compareMap.get(period),
-  }));
+  const data: Record<string, unknown>[] = [];
+  for (let i = 0; i < maxLen; i++) {
+    const basePeriod = basePeriods[i];
+    const comparePeriod = comparePeriods[i];
+    // 라벨: 실제 날짜 표시 (짧은 형태)
+    const label = basePeriod
+      ? basePeriod.replace(/^\d{4}-/, "")
+      : (comparePeriod ? comparePeriod.replace(/^\d{4}-/, "") : `${i + 1}`);
+    const point: Record<string, unknown> = { period: label };
+    if (basePeriod) point[baseLabel] = baseMap.get(basePeriod);
+    if (comparePeriod) point[compareLabel] = compareMap.get(comparePeriod);
+    data.push(point);
+  }
 
   return { data, series: [baseLabel, compareLabel] };
 }
