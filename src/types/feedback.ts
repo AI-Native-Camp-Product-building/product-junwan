@@ -10,6 +10,7 @@ export interface UserFeedback {
   page_url: string | null;
   status: FeedbackStatus;
   admin_memo: string | null;
+  image_urls: string[];
   created_at: string;
   updated_at: string;
 }
