@@ -138,6 +138,8 @@ interface QueryResultTableProps {
   defaultSort?: { field: string; direction: "asc" | "desc" };
   /** Callback to add/remove a dimension and re-execute the query. */
   onDimensionsChange?: (dimensions: string[]) => void;
+  /** Callback to add/remove a metric and re-execute the query. */
+  onMetricsChange?: (metrics: string[]) => void;
   /** Column filter props — when provided, headers show ColumnFilterPopover. */
   filters?: FilterCondition[];
   filterValueOptions?: Map<string, string[]>;
@@ -157,6 +159,7 @@ export function QueryResultTable({
   isLoading,
   defaultSort,
   onDimensionsChange,
+  onMetricsChange,
   filters,
   filterValueOptions,
   onApplyFilter,
@@ -226,20 +229,21 @@ export function QueryResultTable({
   }
 
   const addableDimensions = DIMENSIONS.filter((d) => !dimensions.includes(d.key));
+  const addableMetrics = METRICS.filter((m) => !metrics.includes(m.key));
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Dimension chips: current + addable */}
-      {onDimensionsChange && (
+      {/* Dimension + Metric chips: current + addable */}
+      {(onDimensionsChange || onMetricsChange) && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted-foreground mr-1">컬럼:</span>
+          <span className="text-xs text-muted-foreground mr-1">차원:</span>
           {dimensions.map((dim) => {
             const meta = DIMENSION_MAP.get(dim as never);
             return (
               <button
                 key={dim}
                 type="button"
-                onClick={() => onDimensionsChange(dimensions.filter((d) => d !== dim))}
+                onClick={() => onDimensionsChange?.(dimensions.filter((d) => d !== dim))}
                 className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs text-foreground/80 transition-colors hover:bg-white/[0.1]"
               >
                 {meta?.label ?? dim}
@@ -251,11 +255,39 @@ export function QueryResultTable({
             <button
               key={dim.key}
               type="button"
-              onClick={() => onDimensionsChange([...dimensions, dim.key])}
+              onClick={() => onDimensionsChange?.([...dimensions, dim.key])}
               className="inline-flex items-center gap-1 rounded-full border border-dashed border-white/[0.1] px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
             >
               <IconPlus className="size-3" />
               {dim.label}
+            </button>
+          ))}
+
+          <span className="text-xs text-muted-foreground ml-2 mr-1">지표:</span>
+          {metrics.map((metric) => {
+            const meta = METRIC_MAP.get(metric as MetricKey);
+            return (
+              <button
+                key={metric}
+                type="button"
+                onClick={() => onMetricsChange?.(metrics.filter((m) => m !== metric))}
+                disabled={metrics.length <= 1}
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {meta?.label ?? metric}
+                <IconX className="size-3 opacity-50" />
+              </button>
+            );
+          })}
+          {addableMetrics.map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => onMetricsChange?.([...metrics, m.key])}
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-primary/20 px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary/5 hover:text-foreground"
+            >
+              <IconPlus className="size-3" />
+              {m.label}
             </button>
           ))}
         </div>

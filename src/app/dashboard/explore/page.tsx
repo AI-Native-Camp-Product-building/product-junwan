@@ -230,6 +230,10 @@ export default function ExplorePage() {
               q.setDimensions(dims as typeof q.dimensions);
               setPendingAutoExecute(true);
             }}
+            onMetricsChange={(mets) => {
+              q.setMetrics(mets as typeof q.metrics);
+              setPendingAutoExecute(true);
+            }}
             filters={q.filters}
             filterValueOptions={q.filterValueOptions}
             onApplyFilter={(field, op, value) => {
