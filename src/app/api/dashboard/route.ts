@@ -9,6 +9,27 @@ import { fetchDashboardData } from "@/lib/dashboard-queries";
 import type { DashboardFilters } from "@/types/dashboard";
 
 // ---------------------------------------------------------------------------
+// In-memory cache (15 min TTL)
+// ---------------------------------------------------------------------------
+
+const CACHE_TTL_MS = 15 * 60 * 1000;
+
+let cache: { key: string; data: unknown; timestamp: number } | null = null;
+
+function getCached(key: string): unknown | null {
+  if (!cache || cache.key !== key) return null;
+  if (Date.now() - cache.timestamp > CACHE_TTL_MS) {
+    cache = null;
+    return null;
+  }
+  return cache.data;
+}
+
+function setCache(key: string, data: unknown): void {
+  cache = { key, data, timestamp: Date.now() };
+}
+
+// ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
 
@@ -92,13 +113,27 @@ export async function GET(request: NextRequest) {
     }
 
     const filters: DashboardFilters = { countries, months, mediums, goals, dateMode: "monthly", dateRange: null, startDate, endDate };
-    const { data, meta } = await fetchDashboardData(filters);
+
+    const cacheKey = JSON.stringify(filters);
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=120",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
+    const result = await fetchDashboardData(filters);
+    setCache(cacheKey, result);
 
     return NextResponse.json(
-      { data, meta },
+      result,
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=120",
+          "X-Cache": "MISS",
         },
       },
     );
