@@ -196,4 +196,6 @@ export const DUMMY_FILTER_OPTIONS: FilterOptions = {
   months: [...new Set(rows.map((r) => r.month))].sort(),
   mediums: [...new Set(rows.map((r) => r.medium))].sort(),
   goals: [...new Set(rows.map((r) => r.goal))].sort(),
+  creativeTypes: [],
+  creativeNames: [],
 };

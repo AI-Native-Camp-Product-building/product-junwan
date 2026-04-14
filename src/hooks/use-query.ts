@@ -132,6 +132,8 @@ export function useExploreQuery(): UseQueryReturn {
         if (data.months) map.set("month", data.months);
         if (data.mediums) map.set("medium", data.mediums);
         if (data.goals) map.set("goal", data.goals);
+        if (data.creativeTypes) map.set("creative_type", data.creativeTypes);
+        if (data.creativeNames) map.set("creative_name", data.creativeNames);
         setFilterValueOptions(map);
       })
       .catch(() => {

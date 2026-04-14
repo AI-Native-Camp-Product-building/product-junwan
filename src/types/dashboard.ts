@@ -100,6 +100,8 @@ export interface FilterOptions {
   months: string[];
   mediums: string[];
   goals: string[];
+  creativeTypes: string[];
+  creativeNames: string[];
 }
 
 export interface Insight {

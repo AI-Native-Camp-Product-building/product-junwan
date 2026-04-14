@@ -195,14 +195,16 @@ export async function fetchDashboardData(
  */
 export async function fetchFilterOptions(): Promise<FilterOptions> {
   const emptyFilters: DashboardFilters = { countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null };
-  const [countriesRes, monthsRes, mediumsRes, goalsRes] = await Promise.all([
+  const [countriesRes, monthsRes, mediumsRes, goalsRes, creativeTypesRes, creativeNamesRes] = await Promise.all([
     fetchAllRows("ad_normalized", "sheet_name", emptyFilters),
     fetchAllRows("ad_normalized", "month", emptyFilters),
     fetchAllRows("ad_normalized", "medium", emptyFilters),
     fetchAllRows("ad_normalized", "goal", emptyFilters),
+    fetchAllRows("ad_normalized", "creative_type", emptyFilters),
+    fetchAllRows("ad_normalized", "creative_name", emptyFilters),
   ]);
 
-  for (const res of [countriesRes, monthsRes, mediumsRes, goalsRes]) {
+  for (const res of [countriesRes, monthsRes, mediumsRes, goalsRes, creativeTypesRes, creativeNamesRes]) {
     if (res.error) {
       throw new Error(`Supabase filter query error: ${res.error}`);
     }
@@ -224,6 +226,8 @@ export async function fetchFilterOptions(): Promise<FilterOptions> {
     months: extractDistinct(monthsRes.rows, "month"),
     mediums: extractDistinct(mediumsRes.rows, "medium", true),
     goals: extractDistinct(goalsRes.rows, "goal", true),
+    creativeTypes: extractDistinct(creativeTypesRes.rows, "creative_type", true),
+    creativeNames: extractDistinct(creativeNamesRes.rows, "creative_name", true),
   };
 }
 
