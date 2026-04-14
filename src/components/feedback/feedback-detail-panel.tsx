@@ -24,7 +24,7 @@ import {
   type FeedbackStatus,
 } from "@/types/feedback";
 import { feedbackToMarkdown, copyToClipboard } from "@/lib/feedback-copy";
-import { IconCopy } from "@tabler/icons-react";
+import { IconCopy, IconEdit } from "@tabler/icons-react";
 
 interface FeedbackDetailPanelProps {
   item: UserFeedback | null;
@@ -32,6 +32,7 @@ interface FeedbackDetailPanelProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: FeedbackStatus) => void;
   onMemoSave: (id: string, memo: string) => void;
+  onEdit?: (item: UserFeedback) => void;
 }
 
 export function FeedbackDetailPanel({
@@ -40,6 +41,7 @@ export function FeedbackDetailPanel({
   onOpenChange,
   onStatusChange,
   onMemoSave,
+  onEdit,
 }: FeedbackDetailPanelProps) {
   const [memo, setMemo] = React.useState("");
   const [saving, setSaving] = React.useState(false);
@@ -164,6 +166,12 @@ export function FeedbackDetailPanel({
           </div>
 
           <div className="flex items-center gap-2">
+            {onEdit && (
+              <Button size="sm" variant="outline" onClick={() => onEdit(item)}>
+                <IconEdit className="size-3.5 mr-1" />
+                수정
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={handleCopy}>
               <IconCopy className="size-3.5 mr-1" />
               마크다운 복사

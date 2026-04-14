@@ -19,6 +19,7 @@ export default function FeedbackPage() {
   const [selectedItem, setSelectedItem] = React.useState<UserFeedback | null>(null);
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [editingFeedback, setEditingFeedback] = React.useState<UserFeedback | null>(null);
+  const [activeTab, setActiveTab] = React.useState("manage");
 
   const fetchFeedback = React.useCallback(async () => {
     setLoading(true);
@@ -90,10 +91,10 @@ export default function FeedbackPage() {
           <h1 className="text-xl font-semibold">피드백 관리</h1>
         </div>
         <div className="px-4 lg:px-6">
-          <Tabs defaultValue="manage">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="manage">관리</TabsTrigger>
-              <TabsTrigger value="submit">제출</TabsTrigger>
+              <TabsTrigger value="submit">{editingFeedback ? "수정" : "제출"}</TabsTrigger>
             </TabsList>
             <TabsContent value="manage" className="mt-4">
               {loading ? (
@@ -110,10 +111,14 @@ export default function FeedbackPage() {
             <TabsContent value="submit" className="mt-4">
               <Card className="max-w-lg">
                 <CardHeader>
-                  <CardTitle>피드백 제출</CardTitle>
+                  <CardTitle>{editingFeedback ? "피드백 수정" : "피드백 제출"}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FeedbackForm onSuccess={fetchFeedback} />
+                  <FeedbackForm
+                    onSuccess={() => { setEditingFeedback(null); setActiveTab("manage"); fetchFeedback(); }}
+                    editingFeedback={editingFeedback}
+                    onCancel={() => { setEditingFeedback(null); setActiveTab("manage"); }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -125,6 +130,11 @@ export default function FeedbackPage() {
           onOpenChange={setDetailOpen}
           onStatusChange={handleStatusChange}
           onMemoSave={handleMemoSave}
+          onEdit={(fb) => {
+            setEditingFeedback(fb);
+            setDetailOpen(false);
+            setActiveTab("submit");
+          }}
         />
       </div>
     );
