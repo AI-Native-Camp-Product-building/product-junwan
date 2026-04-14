@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import * as React from "react";
@@ -103,6 +104,23 @@ export function FeedbackDetailPanel({
           <div className="rounded-lg border border-border bg-muted/30 p-3">
             <p className="text-sm whitespace-pre-wrap">{item.message}</p>
           </div>
+
+          {item.image_urls && item.image_urls.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">첨부 이미지:</span>
+              <div className="flex flex-wrap gap-2">
+                {item.image_urls.map((url) => (
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={url}
+                      alt="첨부 이미지"
+                      className="w-24 h-24 object-cover rounded-md border border-border hover:opacity-80 transition-opacity"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">상태:</span>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import * as React from "react";
@@ -7,9 +8,11 @@ import {
   FEEDBACK_STATUSES,
   type UserFeedback,
 } from "@/types/feedback";
+import { IconEdit } from "@tabler/icons-react";
 
 interface FeedbackHistoryProps {
   items: UserFeedback[];
+  onEdit?: (item: UserFeedback) => void;
 }
 
 function statusVariant(
@@ -25,7 +28,7 @@ function statusVariant(
   }
 }
 
-export function FeedbackHistory({ items }: FeedbackHistoryProps) {
+export function FeedbackHistory({ items, onEdit }: FeedbackHistoryProps) {
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4">
@@ -51,6 +54,15 @@ export function FeedbackHistory({ items }: FeedbackHistoryProps) {
               <Badge variant={statusVariant(fb.status)} className="text-[10px]">
                 {st?.label ?? fb.status}
               </Badge>
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(fb)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5"
+                >
+                  <IconEdit className="size-3" />
+                  수정
+                </button>
+              )}
               <span className="ml-auto text-xs text-muted-foreground">
                 {new Date(fb.created_at).toLocaleDateString("ko-KR")}
               </span>
@@ -58,6 +70,18 @@ export function FeedbackHistory({ items }: FeedbackHistoryProps) {
             <p className="text-sm text-foreground/80 line-clamp-3">
               {fb.message}
             </p>
+            {fb.image_urls && fb.image_urls.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {fb.image_urls.map((url) => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt="첨부"
+                    className="w-12 h-12 object-cover rounded border border-border"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}

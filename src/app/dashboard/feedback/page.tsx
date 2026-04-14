@@ -18,6 +18,7 @@ export default function FeedbackPage() {
   const [loading, setLoading] = React.useState(true);
   const [selectedItem, setSelectedItem] = React.useState<UserFeedback | null>(null);
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [editingFeedback, setEditingFeedback] = React.useState<UserFeedback | null>(null);
 
   const fetchFeedback = React.useCallback(async () => {
     setLoading(true);
@@ -137,10 +138,14 @@ export default function FeedbackPage() {
       <div className="flex flex-col gap-6 px-4 lg:px-6 max-w-lg">
         <Card>
           <CardHeader>
-            <CardTitle>피드백 제출</CardTitle>
+            <CardTitle>{editingFeedback ? "피드백 수정" : "피드백 제출"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <FeedbackForm onSuccess={fetchFeedback} />
+            <FeedbackForm
+              onSuccess={() => { setEditingFeedback(null); fetchFeedback(); }}
+              editingFeedback={editingFeedback}
+              onCancel={() => setEditingFeedback(null)}
+            />
           </CardContent>
         </Card>
         <Card>
@@ -151,7 +156,7 @@ export default function FeedbackPage() {
             {loading ? (
               <p className="text-sm text-muted-foreground">불러오는 중...</p>
             ) : (
-              <FeedbackHistory items={items} />
+              <FeedbackHistory items={items} onEdit={setEditingFeedback} />
             )}
           </CardContent>
         </Card>
