@@ -10,6 +10,22 @@ import type {
   DateRange,
   CompareConfig,
 } from "@/types/query";
+import { DERIVED_METRIC_COMPONENTS } from "@/config/query-schema";
+
+/** 파생 지표 선택 시 기반 지표 자동 포함 */
+function ensureBaseMetrics(metrics: MetricKey[]): MetricKey[] {
+  const result = [...metrics];
+  for (const m of metrics) {
+    const derived = DERIVED_METRIC_COMPONENTS[m];
+    if (!derived) continue;
+    for (const base of derived.components) {
+      if (!result.includes(base)) {
+        result.push(base);
+      }
+    }
+  }
+  return result;
+}
 
 interface UseQueryState {
   // Query definition
@@ -49,7 +65,8 @@ export type UseQueryReturn = UseQueryState & UseQueryActions;
 
 export function useExploreQuery(): UseQueryReturn {
   const [dimensions, setDimensions] = React.useState<DimensionKey[]>(["country"]);
-  const [metrics, setMetrics] = React.useState<MetricKey[]>(["ad_spend_krw", "roas"]);
+  const [metrics, setMetricsRaw] = React.useState<MetricKey[]>(ensureBaseMetrics(["ad_spend_krw", "roas"]));
+  const setMetrics = React.useCallback((m: MetricKey[]) => setMetricsRaw(ensureBaseMetrics(m)), []);
   const [filters, setFilters] = React.useState<FilterCondition[]>([]);
   const [dateRange, setDateRange] = React.useState<DateRange | null>(null);
   const [compareEnabled, setCompareEnabled] = React.useState(false);
