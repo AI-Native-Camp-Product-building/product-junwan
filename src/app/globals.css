@@ -14,33 +14,18 @@ html, body {
   pointer-events: auto !important;
 }
 
+/* ================================================================
+   TAILWIND v4 THEME REGISTRATION
+   All custom tokens must be registered here so Tailwind generates
+   utility classes (e.g. bg-surface, text-text-primary, border-widget-border).
+   ================================================================ */
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
+  /* --- Fonts --- */
   --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-chart-5: hsl(var(--chart-5));
-  --color-chart-4: hsl(var(--chart-4));
-  --color-chart-3: hsl(var(--chart-3));
-  --color-chart-2: hsl(var(--chart-2));
-  --color-chart-1: hsl(var(--chart-1));
-  --color-ring: hsl(var(--ring));
-  --color-input: hsl(var(--input));
-  --color-border: hsl(var(--border));
-  --color-destructive: hsl(var(--destructive));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-card: hsl(var(--card));
+
+  /* --- Radius scale --- */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,63 +33,291 @@ html, body {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* --- shadcn base colors --- */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* --- Surface layers --- */
+  --color-surface: hsl(var(--surface));
+  --color-surface-foreground: hsl(var(--surface-foreground));
+  --color-surface-muted: hsl(var(--surface-muted));
+  --color-surface-raised: hsl(var(--surface-raised));
+
+  /* --- Text hierarchy --- */
+  --color-text-primary: hsl(var(--text-primary));
+  --color-text-secondary: hsl(var(--text-secondary));
+  --color-text-tertiary: hsl(var(--text-tertiary));
+
+  /* --- Chrome (sidebar / header) --- */
+  --color-chrome: hsl(var(--chrome));
+  --color-chrome-foreground: hsl(var(--chrome-foreground));
+  --color-chrome-border: hsl(var(--chrome-border));
+  --color-chrome-hover: hsl(var(--chrome-hover));
+  --color-chrome-active: hsl(var(--chrome-active));
+
+  /* --- Widget --- */
+  --color-widget-bg: hsl(var(--widget-bg));
+  --color-widget-border: hsl(var(--widget-border));
+
+  /* --- Status --- */
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+
+  /* --- Universal chart palette (8 hues) --- */
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-chart-6: hsl(var(--chart-6));
+  --color-chart-7: hsl(var(--chart-7));
+  --color-chart-8: hsl(var(--chart-8));
+
+  /* --- Country-specific chart colors --- */
+  --color-country-lezhin: hsl(var(--country-lezhin));
+  --color-country-bomtoon: hsl(var(--country-bomtoon));
+  --color-country-us: hsl(var(--country-us));
+  --color-country-de: hsl(var(--country-de));
+  --color-country-fr: hsl(var(--country-fr));
+  --color-country-th: hsl(var(--country-th));
+  --color-country-tw: hsl(var(--country-tw));
+  --color-country-es: hsl(var(--country-es));
+
+  /* --- Data display --- */
+  --color-skeleton: hsl(var(--skeleton));
+  --color-table-stripe: hsl(var(--table-stripe));
+  --color-table-row-hover: hsl(var(--table-row-hover));
+  --color-badge-success-bg: hsl(var(--badge-success-bg));
+  --color-badge-danger-bg: hsl(var(--badge-danger-bg));
+  --color-tooltip-bg: hsl(var(--tooltip-bg));
+  --color-tooltip-foreground: hsl(var(--tooltip-foreground));
+
+  /* --- Interactive states --- */
+  --color-hover-bg: hsl(var(--hover-bg));
+  --color-active-bg: hsl(var(--active-bg));
+  --color-focus-ring: hsl(var(--focus-ring));
 }
 
+/* ================================================================
+   LIGHT MODE (Gumroad-inspired: white canvas, bold numbers, clean)
+   ================================================================ */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
+  /* --- shadcn base --- */
+  --background: 0 0% 99%;
+  --foreground: 0 0% 7%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
+  --card-foreground: 0 0% 7%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
+  --popover-foreground: 0 0% 7%;
   --primary: 0 0% 9%;
   --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
+  --secondary: 0 0% 95.5%;
   --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
+  --muted: 0 0% 95.5%;
+  --muted-foreground: 0 0% 42%;
+  --accent: 0 0% 95.5%;
   --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 0 0% 9%;
   --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+
+  /* --- Surface layers --- */
+  --surface: 0 0% 97%;
+  --surface-foreground: 0 0% 7%;
+  --surface-muted: 0 0% 95%;
+  --surface-raised: 0 0% 100%;
+
+  /* --- Text hierarchy --- */
+  --text-primary: 0 0% 7%;
+  --text-secondary: 0 0% 40%;
+  --text-tertiary: 0 0% 58%;
+
+  /* --- Chrome --- */
+  --chrome: 0 0% 97%;
+  --chrome-foreground: 0 0% 25%;
+  --chrome-border: 0 0% 91%;
+  --chrome-hover: 0 0% 93%;
+  --chrome-active: 0 0% 90%;
+
+  /* --- Widget --- */
+  --widget-bg: 0 0% 100%;
+  --widget-border: 0 0% 92%;
+  --widget-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03);
+  --widget-hover-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --widget-drag-shadow: 0 12px 28px -4px rgb(0 0 0 / 0.12), 0 4px 8px -2px rgb(0 0 0 / 0.06);
+
+  /* --- Status --- */
+  --success: 142 72% 40%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 7%;
+  --danger: 0 84% 60%;
+  --danger-foreground: 0 0% 100%;
+  --info: 210 92% 55%;
+  --info-foreground: 0 0% 100%;
+
+  /* --- Universal chart palette (mid-lightness, works in both themes) --- */
+  --chart-1: 220 75% 56%;
+  --chart-2: 160 65% 42%;
+  --chart-3: 35 85% 55%;
+  --chart-4: 280 60% 58%;
+  --chart-5: 340 72% 56%;
+  --chart-6: 190 70% 44%;
+  --chart-7: 12 76% 58%;
+  --chart-8: 95 55% 44%;
+
+  /* --- Country-specific --- */
+  --country-lezhin: 0 72% 56%;
+  --country-bomtoon: 330 65% 55%;
+  --country-us: 210 80% 52%;
+  --country-de: 48 90% 48%;
+  --country-fr: 220 75% 56%;
+  --country-th: 160 65% 42%;
+  --country-tw: 330 68% 54%;
+  --country-es: 25 85% 52%;
+
+  /* --- Data display --- */
+  --skeleton: 0 0% 93%;
+  --table-stripe: 0 0% 97%;
+  --table-row-hover: 0 0% 95%;
+  --badge-success-bg: 142 50% 93%;
+  --badge-danger-bg: 0 50% 95%;
+  --tooltip-bg: 0 0% 100%;
+  --tooltip-foreground: 0 0% 7%;
+
+  /* --- Interactive --- */
+  --hover-bg: 0 0% 95%;
+  --active-bg: 0 0% 92%;
+  --focus-ring: 220 75% 56%;
+  --disabled-opacity: 0.5;
 }
 
+/* ================================================================
+   DARK MODE
+   ================================================================ */
 .dark {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
+  /* --- shadcn base --- */
+  --background: 0 0% 7%;
+  --foreground: 0 0% 95%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 0 0% 95%;
   --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 0 0% 14.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 0 0% 14%;
+  --accent-foreground: 0 0% 95%;
+  --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 0 0% 83.1%;
+  --border: 0 0% 16%;
+  --input: 0 0% 16%;
+  --ring: 0 0% 83%;
+
+  /* --- Surface layers --- */
+  --surface: 0 0% 10%;
+  --surface-foreground: 0 0% 95%;
+  --surface-muted: 0 0% 12%;
+  --surface-raised: 0 0% 13%;
+
+  /* --- Text hierarchy --- */
+  --text-primary: 0 0% 95%;
+  --text-secondary: 0 0% 60%;
+  --text-tertiary: 0 0% 45%;
+
+  /* --- Chrome --- */
+  --chrome: 0 0% 4%;
+  --chrome-foreground: 0 0% 70%;
+  --chrome-border: 0 0% 14%;
+  --chrome-hover: 0 0% 12%;
+  --chrome-active: 0 0% 16%;
+
+  /* --- Widget --- */
+  --widget-bg: 0 0% 9%;
+  --widget-border: 0 0% 15%;
+  --widget-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+  --widget-hover-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --widget-drag-shadow: 0 12px 28px -4px rgb(0 0 0 / 0.45), 0 4px 8px -2px rgb(0 0 0 / 0.25);
+
+  /* --- Status --- */
+  --success: 142 72% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 55%;
+  --warning-foreground: 0 0% 7%;
+  --danger: 0 72% 50%;
+  --danger-foreground: 0 0% 100%;
+  --info: 210 85% 60%;
+  --info-foreground: 0 0% 100%;
+
+  /* --- Universal chart palette (brightened for dark bg) --- */
   --chart-1: 220 80% 65%;
   --chart-2: 160 70% 55%;
   --chart-3: 35 90% 65%;
   --chart-4: 280 75% 70%;
   --chart-5: 340 80% 65%;
+  --chart-6: 190 75% 55%;
+  --chart-7: 12 80% 65%;
+  --chart-8: 95 60% 55%;
+
+  /* --- Country-specific (brightened for dark bg) --- */
+  --country-lezhin: 0 75% 62%;
+  --country-bomtoon: 330 68% 62%;
+  --country-us: 210 82% 62%;
+  --country-de: 48 88% 58%;
+  --country-fr: 220 78% 65%;
+  --country-th: 160 68% 52%;
+  --country-tw: 330 72% 62%;
+  --country-es: 25 82% 60%;
+
+  /* --- Data display --- */
+  --skeleton: 0 0% 14%;
+  --table-stripe: 0 0% 8%;
+  --table-row-hover: 0 0% 12%;
+  --badge-success-bg: 142 40% 15%;
+  --badge-danger-bg: 0 40% 15%;
+  --tooltip-bg: 0 0% 12%;
+  --tooltip-foreground: 0 0% 95%;
+
+  /* --- Interactive --- */
+  --hover-bg: 0 0% 13%;
+  --active-bg: 0 0% 16%;
+  --focus-ring: 220 80% 65%;
+  --disabled-opacity: 0.4;
 }
 
+/* ================================================================
+   BASE LAYER
+   ================================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -117,7 +330,66 @@ html, body {
   }
 }
 
-/* === ANIMATION KEYFRAMES === */
+/* ================================================================
+   WIDGET CARD (replaces .glass-card)
+   Semantic card component for dashboard widgets.
+   Uses token-driven shadow/border — works in both light and dark.
+   ================================================================ */
+.widget-card {
+  background: hsl(var(--widget-bg));
+  border: 1px solid hsl(var(--widget-border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--widget-shadow);
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.widget-card:hover {
+  box-shadow: var(--widget-hover-shadow);
+  transform: translateY(-1px);
+}
+
+.widget-card.is-dragging {
+  box-shadow: var(--widget-drag-shadow);
+  transform: translateY(-2px) scale(1.01);
+}
+
+@media (hover: none) {
+  .widget-card:hover {
+    transform: none;
+    box-shadow: var(--widget-shadow);
+  }
+}
+
+/* Backward compat: alias glass-card to widget-card */
+.glass-card {
+  background: hsl(var(--widget-bg));
+  border: 1px solid hsl(var(--widget-border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--widget-shadow);
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-card:hover {
+  box-shadow: var(--widget-hover-shadow);
+  transform: translateY(-1px);
+}
+
+@media (hover: none) {
+  .glass-card:hover {
+    transform: none;
+    box-shadow: var(--widget-shadow);
+  }
+}
+
+/* ================================================================
+   ANIMATION KEYFRAMES
+   ================================================================ */
 @keyframes float {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -12px; }
@@ -148,29 +420,9 @@ html, body {
   to { opacity: 1; filter: blur(0); }
 }
 
-.glass-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
-  border-radius: 1rem;
-  transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.glass-card:hover {
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(100,149,237,0.04);
-  transform: translateY(-1px);
-}
-
-@media (hover: none) {
-  .glass-card:hover {
-    transform: none;
-    box-shadow: none;
-    border-color: rgba(255,255,255,0.08);
-  }
-}
-
-/* === REDUCED MOTION === */
+/* ================================================================
+   REDUCED MOTION
+   ================================================================ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
