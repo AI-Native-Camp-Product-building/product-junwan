@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { METRIC_MAP } from "@/config/query-schema";
+import { getCountryColor } from "@/lib/constants";
 import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
@@ -81,6 +82,12 @@ const COMPARE_COLORS = {
   base: "hsl(220,70%,55%)",
   compare: "hsl(0,70%,55%)",
 };
+
+/** Get color for a series key — uses fixed country colors when applicable */
+function getSeriesColor(key: string, index: number, hasCountryDim: boolean): string {
+  if (hasCountryDim) return getCountryColor(key, index);
+  return CHART_VARS[index % CHART_VARS.length];
+}
 
 const CURVE_TYPES: CurveType[] = ["linear", "monotone", "natural", "basis"];
 
@@ -279,6 +286,7 @@ export function ExploreChart({
   // Check if main query already has a time dimension
   const existingTimeDim = dimensions.find((d) => d === "date" || d === "month" || d === "week");
   const seriesDims = dimensions.filter((d) => d !== "date" && d !== "month" && d !== "week");
+  const hasCountryDim = dimensions.includes("country");
 
   // Self-fetch needed when:
   // 1. No time dimension in main query but dateRange is set
@@ -396,12 +404,12 @@ export function ExploreChart({
       seriesKeys.forEach((key, i) => {
         config[key] = {
           label: key,
-          color: CHART_VARS[i % CHART_VARS.length],
+          color: getSeriesColor(key, i, hasCountryDim),
         };
       });
     }
     return config;
-  }, [isCompare, effectiveCompareBase, effectiveCompareRows, baseLabel, compareLabel, seriesKeys]);
+  }, [isCompare, effectiveCompareBase, effectiveCompareRows, baseLabel, compareLabel, seriesKeys, hasCountryDim]);
 
   // Metric formatter
   const metricMeta = METRIC_MAP.get(selectedMetric as Parameters<typeof METRIC_MAP.get>[0]);
@@ -525,7 +533,7 @@ export function ExploreChart({
                   ? i === 0
                     ? COMPARE_COLORS.base
                     : COMPARE_COLORS.compare
-                  : CHART_VARS[i % CHART_VARS.length];
+                  : getSeriesColor(key, i, hasCountryDim);
               return (
                 <Line
                   key={key}
@@ -581,7 +589,7 @@ export function ExploreChart({
                   ? i === 0
                     ? COMPARE_COLORS.base
                     : COMPARE_COLORS.compare
-                  : CHART_VARS[i % CHART_VARS.length];
+                  : getSeriesColor(key, i, hasCountryDim);
               return (
                 <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span
