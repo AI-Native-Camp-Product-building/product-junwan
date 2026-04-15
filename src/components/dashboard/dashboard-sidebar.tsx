@@ -5,8 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconHome,
-  IconBuildingStore,
-  IconSpeakerphone,
   IconSearch,
   IconLogout,
   IconMessageCircle,
@@ -35,8 +33,6 @@ export function DashboardSidebar({
   const navMain = [
     { title: "홈", href: "/dashboard", icon: IconHome },
     { title: "탐색", href: "/dashboard/explore", icon: IconSearch },
-    { title: "플랫폼별", href: "/dashboard/platform", icon: IconBuildingStore },
-    { title: "매체별", href: "/dashboard/medium", icon: IconSpeakerphone },
     {
       title: isAdmin(session?.user?.email) ? "피드백 관리" : "피드백",
       href: "/dashboard/feedback",

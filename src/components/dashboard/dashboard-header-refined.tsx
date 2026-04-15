@@ -56,8 +56,6 @@ export function DashboardHeaderRefined() {
   const HEADER_NAV_ITEMS = [
     { href: "/dashboard", label: "홈" },
     { href: "/dashboard/explore", label: "탐색" },
-    { href: "/dashboard/platform", label: "플랫폼별" },
-    { href: "/dashboard/medium", label: "매체별" },
     {
       href: "/dashboard/feedback",
       label: isAdmin(session?.user?.email) ? "피드백 관리" : "피드백",
