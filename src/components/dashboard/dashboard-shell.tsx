@@ -147,7 +147,7 @@ function computeTrendData(
   metric: TrendMetric,
   granularity: ChartGranularity,
 ): TrendPoint[] {
-  const map = new Map<string, Map<string, { adSpend: number; revenue: number; signups: number }>>();
+  const map = new Map<string, Map<string, { adSpend: number; revenue: number; signups: number; hasData: boolean }>>();
 
   for (const row of data) {
     // KEYWORD: dashboard-trend-period-granularity
@@ -155,10 +155,13 @@ function computeTrendData(
 
     if (!map.has(periodKey)) map.set(periodKey, new Map());
     const countryMap = map.get(periodKey)!;
-    const existing = countryMap.get(row.country) ?? { adSpend: 0, revenue: 0, signups: 0 };
+    const existing = countryMap.get(row.country) ?? { adSpend: 0, revenue: 0, signups: 0, hasData: false };
     existing.adSpend += row.adSpend;
     existing.revenue += row.revenue;
     existing.signups += row.signups;
+    if (row.adSpend > 0 || row.revenue > 0 || row.signups > 0) {
+      existing.hasData = true;
+    }
     countryMap.set(row.country, existing);
   }
 
@@ -166,11 +169,16 @@ function computeTrendData(
   for (const [period, countryMap] of [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     const point: TrendPoint = { period };
     let totalSpend = 0, totalRevenue = 0, totalSignups = 0;
+    let totalHasData = false;
 
     for (const [country, agg] of countryMap) {
       totalSpend += agg.adSpend;
       totalRevenue += agg.revenue;
       totalSignups += agg.signups;
+      if (agg.hasData) totalHasData = true;
+
+      // 미입력(모든 지표 0) → skip = undefined = Recharts 갭
+      if (!agg.hasData) continue;
 
       if (metric === "adSpend") point[country] = Math.round(agg.adSpend);
       else if (metric === "signups") point[country] = agg.signups;
@@ -179,11 +187,13 @@ function computeTrendData(
       else if (metric === "signupCpa") point[country] = agg.signups > 0 ? Math.round(agg.adSpend / agg.signups) : 0;
     }
 
-    if (metric === "adSpend") point["\uC804\uCCB4"] = Math.round(totalSpend);
-    else if (metric === "signups") point["\uC804\uCCB4"] = totalSignups;
-    else if (metric === "revenue") point["\uC804\uCCB4"] = Math.round(totalRevenue);
-    else if (metric === "roas") point["\uC804\uCCB4"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
-    else if (metric === "signupCpa") point["\uC804\uCCB4"] = totalSignups > 0 ? Math.round(totalSpend / totalSignups) : 0;
+    if (totalHasData) {
+      if (metric === "adSpend") point["\uC804\uCCB4"] = Math.round(totalSpend);
+      else if (metric === "signups") point["\uC804\uCCB4"] = totalSignups;
+      else if (metric === "revenue") point["\uC804\uCCB4"] = Math.round(totalRevenue);
+      else if (metric === "roas") point["\uC804\uCCB4"] = totalSpend > 0 ? Math.round((totalRevenue / totalSpend) * 100 * 10) / 10 : 0;
+      else if (metric === "signupCpa") point["\uC804\uCCB4"] = totalSignups > 0 ? Math.round(totalSpend / totalSignups) : 0;
+    }
 
     result.push(point);
   }

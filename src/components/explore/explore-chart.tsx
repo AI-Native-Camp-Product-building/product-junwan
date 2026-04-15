@@ -30,7 +30,9 @@ import {
 import { METRIC_MAP } from "@/config/query-schema";
 import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
 import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
 import { startOfWeek, format as fnsFormat } from "date-fns";
+import type { CurveType } from "recharts/types/shape/Curve";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,6 +80,8 @@ const COMPARE_COLORS = {
   base: "hsl(220,70%,55%)",
   compare: "hsl(0,70%,55%)",
 };
+
+const CURVE_TYPES: CurveType[] = ["linear", "monotone", "natural", "basis"];
 
 const GRANULARITY_OPTIONS: { value: Granularity; label: string }[] = [
   { value: "daily", label: "일별" },
@@ -256,6 +260,8 @@ export function ExploreChart({
 }: ExploreChartProps) {
   const [selectedMetric, setSelectedMetric] = React.useState(metrics[0] ?? "");
   const [granularity, setGranularity] = React.useState<Granularity>("daily");
+  const [curveStep, setCurveStep] = React.useState(1);
+  const curveType = CURVE_TYPES[curveStep];
   const [chartRows, setChartRows] = React.useState<QueryResultRow[] | null>(null);
   const [chartCompareBase, setChartCompareBase] = React.useState<QueryResultRow[] | null>(null);
   const [chartCompareRows, setChartCompareRows] = React.useState<QueryResultRow[] | null>(null);
@@ -507,7 +513,7 @@ export function ExploreChart({
               return (
                 <Line
                   key={key}
-                  type="monotone"
+                  type={curveType}
                   dataKey={key}
                   stroke={color}
                   strokeWidth={2}
@@ -518,6 +524,20 @@ export function ExploreChart({
             })}
           </LineChart>
         </ChartContainer>
+
+        {/* Curve smoothness slider */}
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <span className="text-[10px] text-muted-foreground select-none">직선</span>
+          <Slider
+            value={curveStep}
+            onValueChange={setCurveStep}
+            min={0}
+            max={3}
+            step={1}
+            className="w-32"
+          />
+          <span className="text-[10px] text-muted-foreground select-none">곡선</span>
+        </div>
 
         {/* Legend */}
         {seriesKeys.length > 1 && (

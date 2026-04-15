@@ -78,7 +78,7 @@ export interface RoasTrendPoint {
 
 export interface TrendPoint {
   period: string; // x-axis: "2026-01" or "2026-01-15"
-  [countryOrTotal: string]: number | string;
+  [countryOrTotal: string]: number | string | undefined;
 }
 
 /**
