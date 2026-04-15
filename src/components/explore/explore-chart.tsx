@@ -31,6 +31,7 @@ import { METRIC_MAP } from "@/config/query-schema";
 import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { IconChevronDown } from "@tabler/icons-react";
 import { startOfWeek, format as fnsFormat } from "date-fns";
 import type { CurveType } from "recharts/types/shape/Curve";
 
@@ -261,6 +262,7 @@ export function ExploreChart({
   const [selectedMetric, setSelectedMetric] = React.useState(metrics[0] ?? "");
   const [granularity, setGranularity] = React.useState<Granularity>("daily");
   const [curveStep, setCurveStep] = React.useState(1);
+  const [showCurveSlider, setShowCurveSlider] = React.useState(false);
   const curveType = CURVE_TYPES[curveStep];
   const [chartRows, setChartRows] = React.useState<QueryResultRow[] | null>(null);
   const [chartCompareBase, setChartCompareBase] = React.useState<QueryResultRow[] | null>(null);
@@ -525,18 +527,35 @@ export function ExploreChart({
           </LineChart>
         </ChartContainer>
 
-        {/* Curve smoothness slider */}
-        <div className="flex items-center justify-center gap-2 pt-1">
-          <span className="text-[10px] text-muted-foreground select-none">직선</span>
-          <Slider
-            value={curveStep}
-            onValueChange={setCurveStep}
-            min={0}
-            max={3}
-            step={1}
-            className="w-32"
-          />
-          <span className="text-[10px] text-muted-foreground select-none">곡선</span>
+        {/* Curve smoothness toggle + slider */}
+        <div className="flex flex-col items-center pt-1">
+          <button
+            type="button"
+            onClick={() => setShowCurveSlider((v) => !v)}
+            className="group flex items-center justify-center rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+            title="곡선 조절"
+          >
+            <IconChevronDown
+              className={cn(
+                "size-3.5 transition-transform",
+                showCurveSlider && "rotate-180",
+              )}
+            />
+          </button>
+          {showCurveSlider && (
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="text-[10px] text-muted-foreground select-none">직선</span>
+              <Slider
+                value={curveStep}
+                onValueChange={setCurveStep}
+                min={0}
+                max={3}
+                step={1}
+                className="w-32"
+              />
+              <span className="text-[10px] text-muted-foreground select-none">곡선</span>
+            </div>
+          )}
         </div>
 
         {/* Legend */}
