@@ -1,12 +1,13 @@
 -- =============================================================================
 -- creative_name 공백 정규화
--- "클 로드", "클로 드", "클 로 드" → "클로드" (가장 빈도 높은 원본 사용)
+-- "클 로드", "클로 드", "클 로 드", "클로드!", "클로드?" → "클로드" (가장 빈도 높은 원본 사용)
+-- 공백 + 특수기호(?!><등) 모두 제거 후 그룹핑
 -- =============================================================================
 
 -- 1. 정규화 매핑 뷰: 공백 제거 후 그룹핑, 가장 많이 쓰인 원본을 canonical로 선택
 create or replace view public.creative_name_canonical as
 select distinct on (normalized)
-  replace(creative_name, ' ', '') as normalized,
+  regexp_replace(creative_name, '[[:space:][:punct:]]', '', 'g') as normalized,
   creative_name as canonical
 from (
   select creative_name, count(*) as cnt
@@ -17,7 +18,7 @@ from (
 order by normalized, cnt desc;
 
 comment on view public.creative_name_canonical is
-  '공백 제거 기준으로 creative_name을 정규화. 가장 빈도 높은 원본을 canonical로 사용.';
+  '공백+특수기호 제거 기준으로 creative_name을 정규화. 가장 빈도 높은 원본을 canonical로 사용.';
 
 -- 2. ad_normalized 뷰 재생성 (creative_name → canonical 적용)
 drop view if exists public.ad_normalized cascade;
