@@ -18,14 +18,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface KpiCardsRefinedProps {
   summary: KpiSummary;
   isLoading: boolean;
+  changeLabel?: string;
 }
 
 interface KpiCardDefinition {
   label: string;
   getValue: (summary: KpiSummary) => string;
   getChange: (summary: KpiSummary) => number;
-  changeLabel: string;
   neutralPositive?: boolean;
+  isRoas?: boolean;
 }
 
 // KEYWORD: dashboard-kpi-card-layout
@@ -34,32 +35,28 @@ const KPI_CARD_DEFINITIONS: KpiCardDefinition[] = [
     label: "총 광고비",
     getValue: (summary) => formatKrw(summary.adSpend),
     getChange: (summary) => summary.adSpendChange,
-    changeLabel: "전월 대비",
     neutralPositive: true,
   },
   {
     label: "총 회원가입",
     getValue: (summary) => formatNumber(summary.signups),
     getChange: (summary) => summary.signupsChange,
-    changeLabel: "전월 대비",
   },
   {
     label: "총 결제전환",
     getValue: (summary) => formatNumber(summary.conversions),
     getChange: (summary) => summary.conversionsChange,
-    changeLabel: "전월 대비",
   },
   {
     label: "총 결제금액",
     getValue: (summary) => formatKrw(summary.revenue),
     getChange: (summary) => summary.revenueChange,
-    changeLabel: "전월 대비",
   },
   {
     label: "평균 ROAS",
     getValue: (summary) => formatPercent(summary.roas),
     getChange: (summary) => summary.roasChange,
-    changeLabel: "전월 대비 (pp)",
+    isRoas: true,
   },
 ];
 
@@ -98,6 +95,7 @@ function ChangeBadge({
 export function KpiCardsRefined({
   summary,
   isLoading,
+  changeLabel: changeLabelProp = "전월 대비",
 }: KpiCardsRefinedProps) {
   const isEmpty =
     summary.adSpend === 0 &&
@@ -162,7 +160,7 @@ export function KpiCardsRefined({
                 <Skeleton className="h-4 w-40" />
               ) : (
                 <>
-                  {definition.changeLabel}
+                  {definition.isRoas ? `${changeLabelProp} (pp)` : changeLabelProp}
                   {definition.getChange(summary) >= 0 ? (
                     <IconTrendingUp className="size-4 text-[hsl(160,60%,45%)]" />
                   ) : (

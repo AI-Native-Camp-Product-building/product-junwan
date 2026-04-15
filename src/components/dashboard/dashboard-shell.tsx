@@ -69,21 +69,87 @@ function useDebounce<T>(value: T, delay: number): T {
 
 // KEYWORD: dashboard-kpi-summary-client
 /** Compute KPI summary with MoM change. */
-function computeKpiSummary(data: AdRow[]): KpiSummary {
+/** Split data into current/previous periods based on dateMode.
+ *  - weekly: rows split by week boundary (last 7 days vs prior 7 days)
+ *  - monthly: group by month, compare last 2 months
+ *  - daily/custom: split dateRange in half, compare 2nd half vs 1st half (전 동기간)
+ */
+function splitByPeriod(
+  data: AdRow[],
+  dateMode: DateMode,
+  dateRange: DateRange | null,
+): { curr: AdRow[]; prev: AdRow[] } {
+  if (dateMode === "monthly") {
+    const byMonth = new Map<string, AdRow[]>();
+    for (const row of data) {
+      const existing = byMonth.get(row.month) ?? [];
+      existing.push(row);
+      byMonth.set(row.month, existing);
+    }
+    const sorted = [...byMonth.keys()].sort();
+    if (sorted.length >= 2) {
+      return {
+        curr: byMonth.get(sorted[sorted.length - 1]) ?? [],
+        prev: byMonth.get(sorted[sorted.length - 2]) ?? [],
+      };
+    }
+    return { curr: data, prev: [] };
+  }
+
+  if (dateMode === "weekly") {
+    // 날짜 기준: 최근 7일 vs 그 전 7일
+    const withDate = data.filter((r) => r.date);
+    if (withDate.length === 0) return { curr: data, prev: [] };
+    const dates = withDate.map((r) => r.date).sort();
+    const latest = new Date(dates[dates.length - 1]);
+    const weekAgo = new Date(latest);
+    weekAgo.setDate(weekAgo.getDate() - 6); // 7일 포함
+    const twoWeeksAgo = new Date(weekAgo);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7);
+
+    const weekAgoStr = weekAgo.toISOString().slice(0, 10);
+    const twoWeeksAgoStr = twoWeeksAgo.toISOString().slice(0, 10);
+
+    return {
+      curr: withDate.filter((r) => r.date >= weekAgoStr),
+      prev: withDate.filter((r) => r.date >= twoWeeksAgoStr && r.date < weekAgoStr),
+    };
+  }
+
+  // daily/custom: dateRange 기반 전 동기간
+  if (dateRange) {
+    const start = new Date(dateRange.startDate);
+    const end = new Date(dateRange.endDate);
+    const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const prevStart = new Date(start);
+    prevStart.setDate(prevStart.getDate() - days);
+    const prevEnd = new Date(start);
+    prevEnd.setDate(prevEnd.getDate() - 1);
+
+    const startStr = dateRange.startDate;
+    const endStr = dateRange.endDate;
+    const prevStartStr = prevStart.toISOString().slice(0, 10);
+    const prevEndStr = prevEnd.toISOString().slice(0, 10);
+
+    const withDate = data.filter((r) => r.date);
+    return {
+      curr: withDate.filter((r) => r.date >= startStr && r.date <= endStr),
+      prev: withDate.filter((r) => r.date >= prevStartStr && r.date <= prevEndStr),
+    };
+  }
+
+  // fallback: 월 기준
+  return splitByPeriod(data, "monthly", null);
+}
+
+function computeKpiSummary(data: AdRow[], dateMode: DateMode = "monthly", dateRange: DateRange | null = null): KpiSummary {
   const adSpend = data.reduce((s, r) => s + r.adSpend, 0);
   const revenue = data.reduce((s, r) => s + r.revenue, 0);
   const signups = data.reduce((s, r) => s + r.signups, 0);
   const conversions = data.reduce((s, r) => s + r.conversions, 0);
   const roas = adSpend > 0 ? (revenue / adSpend) * 100 : 0;
 
-  // Group by month to compute MoM
-  const byMonth = new Map<string, AdRow[]>();
-  for (const row of data) {
-    const existing = byMonth.get(row.month) ?? [];
-    existing.push(row);
-    byMonth.set(row.month, existing);
-  }
-  const sortedMonths = [...byMonth.keys()].sort();
+  const { curr, prev } = splitByPeriod(data, dateMode, dateRange);
 
   let adSpendChange = 0;
   let revenueChange = 0;
@@ -91,10 +157,7 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
   let signupsChange = 0;
   let conversionsChange = 0;
 
-  if (sortedMonths.length >= 2) {
-    const curr = byMonth.get(sortedMonths[sortedMonths.length - 1])!;
-    const prev = byMonth.get(sortedMonths[sortedMonths.length - 2])!;
-
+  if (prev.length > 0) {
     const currAdSpend = curr.reduce((s, r) => s + r.adSpend, 0);
     const prevAdSpend = prev.reduce((s, r) => s + r.adSpend, 0);
     const currRevenue = curr.reduce((s, r) => s + r.revenue, 0);
@@ -110,7 +173,7 @@ function computeKpiSummary(data: AdRow[]): KpiSummary {
     revenueChange = prevRevenue > 0 ? ((currRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     signupsChange = prevSignups > 0 ? ((currSignups - prevSignups) / prevSignups) * 100 : 0;
     conversionsChange = prevConversions > 0 ? ((currConversions - prevConversions) / prevConversions) * 100 : 0;
-    roasChange = currRoas - prevRoas; // pp change
+    roasChange = currRoas - prevRoas;
   }
 
   return {
@@ -362,8 +425,16 @@ export function DashboardShell({
     if (debouncedFilters.goals.length > 0) params.set("goals", debouncedFilters.goals.join(","));
 
     // Use dateRange for API if available, otherwise fall back to months
+    // Extend range to include comparison period data
     if (debouncedFilters.dateRange) {
-      params.set("startDate", debouncedFilters.dateRange.startDate);
+      const start = new Date(debouncedFilters.dateRange.startDate);
+      const end = new Date(debouncedFilters.dateRange.endDate);
+      const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const mode = debouncedFilters.dateMode;
+      const extraDays = mode === "weekly" ? 14 : days; // 전주 or 전 동기간
+      const extendedStart = new Date(start);
+      extendedStart.setDate(extendedStart.getDate() - extraDays);
+      params.set("startDate", extendedStart.toISOString().slice(0, 10));
       params.set("endDate", debouncedFilters.dateRange.endDate);
     } else if (debouncedFilters.months.length > 0) {
       params.set("months", debouncedFilters.months.join(","));
@@ -376,7 +447,7 @@ export function DashboardShell({
       .finally(() => setIsLoading(false));
   }, [debouncedFilters, initialData]);
 
-  const kpiSummary = React.useMemo(() => computeKpiSummary(data), [data]);
+  const kpiSummary = React.useMemo(() => computeKpiSummary(data, filters.dateMode, filters.dateRange), [data, filters.dateMode, filters.dateRange]);
   const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
 
   const trendData = React.useMemo(() => ({
@@ -452,7 +523,15 @@ export function DashboardShell({
         </div>
       </div>
       {/* KEYWORD: dashboard-shell-main-flow */}
-      <KpiCardsRefined summary={kpiSummary} isLoading={isLoading} />
+      <KpiCardsRefined
+        summary={kpiSummary}
+        isLoading={isLoading}
+        changeLabel={
+          filters.dateMode === "weekly" ? "전주 대비"
+            : filters.dateMode === "monthly" ? "전월 대비"
+            : "전 동기간 대비"
+        }
+      />
       <ChartSection
         trendData={trendData}
         mediumSpendData={mediumSpendData}
