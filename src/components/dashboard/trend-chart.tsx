@@ -47,7 +47,9 @@ interface TrendChartProps {
   onChartGranularityChange: (g: ChartGranularity) => void;
 }
 
-const CHART_COLORS = [
+import { getCountryColor } from "@/lib/constants";
+
+const CHART_COLORS_FALLBACK = [
   "rgba(200,200,210,0.9)",
   "rgba(170,180,200,0.8)",
   "rgba(150,160,180,0.7)",
@@ -125,12 +127,12 @@ export function TrendChart({
 
   const chartConfig = React.useMemo<ChartConfig>(() => {
     const config: ChartConfig = {
-      전체: { label: "전체", color: CHART_COLORS[0] },
+      전체: { label: "전체", color: "hsl(220, 60%, 55%)" },
     };
     countries.forEach((country, i) => {
       config[country] = {
         label: country,
-        color: CHART_COLORS[(i + 1) % CHART_COLORS.length],
+        color: getCountryColor(country, i),
       };
     });
     return config;
@@ -256,7 +258,7 @@ export function TrendChart({
                       {activeKeys.map((key, i) => {
                         const color =
                           chartConfig[key]?.color ??
-                          CHART_COLORS[i % CHART_COLORS.length];
+                          CHART_COLORS_FALLBACK[i % CHART_COLORS_FALLBACK.length];
                         return (
                           <linearGradient
                             key={key}
@@ -292,17 +294,28 @@ export function TrendChart({
                       content={
                         <ChartTooltipContent
                           labelFormatter={(value) => `${value}`}
-                          formatter={(value) =>
-                            typeof value === "number" ? formatter(value) : String(value)
-                          }
-                          indicator="dot"
+                          formatter={(value, name, item) => {
+                            const color = item.color ?? chartConfig[String(name)]?.color ?? "hsl(220,60%,55%)";
+                            return (
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                                  style={{ backgroundColor: color }}
+                                />
+                                <span className="text-muted-foreground">{name}</span>
+                                <span className="ml-auto font-mono font-medium tabular-nums">
+                                  {typeof value === "number" ? formatter(value) : String(value)}
+                                </span>
+                              </div>
+                            );
+                          }}
                         />
                       }
                     />
                     {activeKeys.map((key, i) => {
                       const safeId = `${metricKey}-${key.replace(/[^a-zA-Z0-9]/g, "_")}`;
                       const color =
-                        chartConfig[key]?.color ?? CHART_COLORS[i % CHART_COLORS.length];
+                        chartConfig[key]?.color ?? CHART_COLORS_FALLBACK[i % CHART_COLORS_FALLBACK.length];
                       return (
                         <Area
                           key={key}

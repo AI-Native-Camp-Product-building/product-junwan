@@ -22,16 +22,17 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
+import { getCountryColor } from "@/lib/constants";
 
-const DONUT_COLORS = [
-  "hsl(221, 83%, 53%)",   // blue
-  "hsl(160, 60%, 45%)",   // emerald
-  "hsl(38, 92%, 50%)",    // amber
-  "hsl(0, 72%, 51%)",     // red
-  "hsl(270, 60%, 55%)",   // purple
-  "hsl(190, 80%, 42%)",   // cyan
-  "hsl(330, 65%, 50%)",   // pink
-  "hsl(45, 85%, 55%)",    // yellow
+const FALLBACK_COLORS = [
+  "hsl(221, 83%, 53%)",
+  "hsl(160, 60%, 45%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(0, 72%, 51%)",
+  "hsl(270, 60%, 55%)",
+  "hsl(190, 80%, 42%)",
+  "hsl(330, 65%, 50%)",
+  "hsl(45, 85%, 55%)",
 ];
 
 type GroupBy = "country" | "medium";
@@ -61,6 +62,11 @@ function aggregateBy(data: AdRow[], groupBy: GroupBy): SliceData[] {
       pct: total > 0 ? (value / total) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value);
+}
+
+function getSliceColor(name: string, index: number, groupBy: GroupBy): string {
+  if (groupBy === "country") return getCountryColor(name, index);
+  return FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 }
 
 const chartConfig: ChartConfig = {
@@ -127,7 +133,21 @@ export function SpendDonutChart({ data, isLoading }: SpendDonutChartProps) {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value) => formatKrw(Number(value))}
+                  formatter={(value, name, item, index) => {
+                    const color = item.payload?.fill ?? getSliceColor(String(name), index ?? 0, groupBy);
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-muted-foreground">{name}</span>
+                        <span className="ml-auto font-mono font-medium tabular-nums">
+                          {formatKrw(Number(value))}
+                        </span>
+                      </div>
+                    );
+                  }}
                 />
               }
             />
@@ -140,8 +160,8 @@ export function SpendDonutChart({ data, isLoading }: SpendDonutChartProps) {
               strokeWidth={2}
               stroke="rgba(0,0,0,0.3)"
             >
-              {slices.map((_, i) => (
-                <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+              {slices.map((s, i) => (
+                <Cell key={i} fill={getSliceColor(s.name, i, groupBy)} />
               ))}
             </Pie>
             <text
@@ -170,7 +190,7 @@ export function SpendDonutChart({ data, isLoading }: SpendDonutChartProps) {
             <div key={s.name} className="flex items-center gap-2 text-sm">
               <div
                 className="size-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }}
+                style={{ backgroundColor: getSliceColor(s.name, i, groupBy) }}
               />
               <span className="truncate flex-1 text-foreground/80">{s.name}</span>
               <span className="tabular-nums text-muted-foreground text-xs">{formatPercent(s.pct)}</span>
