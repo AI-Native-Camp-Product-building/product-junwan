@@ -20,7 +20,8 @@ comment on view public.creative_name_canonical is
   '공백 제거 기준으로 creative_name을 정규화. 가장 빈도 높은 원본을 canonical로 사용.';
 
 -- 2. ad_normalized 뷰 재생성 (creative_name → canonical 적용)
-create or replace view public.ad_normalized as
+drop view if exists public.ad_normalized cascade;
+create view public.ad_normalized as
 select
   r.id,
   r.sheet_source_id,
