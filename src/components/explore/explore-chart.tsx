@@ -30,6 +30,7 @@ import {
 import { METRIC_MAP } from "@/config/query-schema";
 import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
 import { cn } from "@/lib/utils";
+import { startOfWeek, format as fnsFormat } from "date-fns";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,12 +85,50 @@ const GRANULARITY_OPTIONS: { value: Granularity; label: string }[] = [
   { value: "monthly", label: "월별" },
 ];
 
+/** Map granularity to the DB dimension used for fetching.
+ *  weekly → fetch by "date" and aggregate client-side (no week dim in RPC). */
 function granularityToDimension(g: Granularity): DimensionKey {
   switch (g) {
     case "daily": return "date";
-    case "weekly": return "week";
+    case "weekly": return "date"; // fetch daily, aggregate to weeks client-side
     case "monthly": return "month";
   }
+}
+
+/** Aggregate daily rows into weekly buckets (Monday-start). */
+function aggregateToWeeks(rows: QueryResultRow[], timeDim: string): QueryResultRow[] {
+  const grouped = new Map<string, Map<string, number>>();
+
+  for (const row of rows) {
+    const dateStr = String(row[timeDim] ?? "");
+    if (!dateStr) continue;
+    const weekStart = fnsFormat(startOfWeek(new Date(dateStr), { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+    if (!grouped.has(weekStart)) {
+      grouped.set(weekStart, new Map());
+    }
+    const weekMap = grouped.get(weekStart)!;
+
+    // Copy non-time dimension values (take first occurrence)
+    for (const [key, val] of Object.entries(row)) {
+      if (key === timeDim) continue;
+      if (typeof val === "number") {
+        weekMap.set(key, (weekMap.get(key) ?? 0) + val);
+      } else if (!weekMap.has(key)) {
+        weekMap.set(key, val as number);
+      }
+    }
+  }
+
+  return Array.from(grouped.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([weekStart, values]) => {
+      const result: QueryResultRow = { [timeDim]: weekStart };
+      for (const [k, v] of values.entries()) {
+        result[k] = v;
+      }
+      return result;
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -233,8 +272,12 @@ export function ExploreChart({
   const existingTimeDim = dimensions.find((d) => d === "date" || d === "month" || d === "week");
   const seriesDims = dimensions.filter((d) => d !== "date" && d !== "month" && d !== "week");
 
-  // Determine if self-fetch is needed: dateRange set but no time dimension in main query
-  const needsSelfFetch = !existingTimeDim && !!dateRange;
+  // Self-fetch needed when:
+  // 1. No time dimension in main query but dateRange is set
+  // 2. Main query has a time dimension but granularity doesn't match
+  //    (e.g. main has "date" but user wants "monthly", or main has "month" but user wants "daily")
+  const granularityDim = granularityToDimension(granularity);
+  const needsSelfFetch = !!dateRange && (!existingTimeDim || (existingTimeDim !== granularityDim && granularity !== "weekly"));
 
   // Self-fetch chart data when needed
   React.useEffect(() => {
@@ -269,13 +312,16 @@ export function ExploreChart({
     })
       .then((res) => res.json())
       .then((data) => {
+        const applyWeekly = (r: QueryResultRow[]) =>
+          granularity === "weekly" ? aggregateToWeeks(r, timeDimKey) : r;
+
         if (data.rows) {
-          setChartRows(data.rows);
+          setChartRows(applyWeekly(data.rows));
         }
         // Compare mode results
         if (data.base?.rows && data.compare?.rows) {
-          setChartCompareBase(data.base.rows);
-          setChartCompareRows(data.compare.rows);
+          setChartCompareBase(applyWeekly(data.base.rows));
+          setChartCompareRows(applyWeekly(data.compare.rows));
         }
       })
       .catch(() => { /* abort or network error */ })
@@ -285,10 +331,27 @@ export function ExploreChart({
   }, [needsSelfFetch, granularity, metrics, filters, dateRange, seriesDims.join(",")]);
 
   // Determine effective data source
-  const effectiveTimeDim = needsSelfFetch ? granularityToDimension(granularity) : existingTimeDim;
-  const effectiveRows = needsSelfFetch ? (chartRows ?? []) : rows;
-  const effectiveCompareBase = needsSelfFetch ? (chartCompareBase ?? compareBase) : compareBase;
-  const effectiveCompareRows = needsSelfFetch ? (chartCompareRows ?? compareRows) : compareRows;
+  // When main query has "date" and user selects "weekly", aggregate client-side
+  const useWeeklyOnExisting = granularity === "weekly" && existingTimeDim === "date" && !needsSelfFetch;
+  const effectiveTimeDim = needsSelfFetch ? granularityDim : existingTimeDim;
+
+  const effectiveRows = React.useMemo(() => {
+    if (needsSelfFetch) return chartRows ?? [];
+    if (useWeeklyOnExisting) return aggregateToWeeks(rows, "date");
+    return rows;
+  }, [needsSelfFetch, useWeeklyOnExisting, chartRows, rows]);
+
+  const effectiveCompareBase = React.useMemo(() => {
+    if (needsSelfFetch) return chartCompareBase ?? compareBase;
+    if (useWeeklyOnExisting && compareBase) return aggregateToWeeks(compareBase, "date");
+    return compareBase;
+  }, [needsSelfFetch, useWeeklyOnExisting, chartCompareBase, compareBase]);
+
+  const effectiveCompareRows = React.useMemo(() => {
+    if (needsSelfFetch) return chartCompareRows ?? compareRows;
+    if (useWeeklyOnExisting && compareRows) return aggregateToWeeks(compareRows, "date");
+    return compareRows;
+  }, [needsSelfFetch, useWeeklyOnExisting, chartCompareRows, compareRows]);
 
   // Build chart data
   const { chartData, seriesKeys } = React.useMemo(() => {
