@@ -501,7 +501,21 @@ export function ExploreChart({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value) => formatValue(Number(value))}
+                  formatter={(value, name, item, index) => {
+                    const color = item.color ?? CHART_VARS[(index ?? 0) % CHART_VARS.length];
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-muted-foreground">{name}</span>
+                        <span className="ml-auto font-mono font-medium tabular-nums">
+                          {formatValue(Number(value))}
+                        </span>
+                      </div>
+                    );
+                  }}
                 />
               }
             />
