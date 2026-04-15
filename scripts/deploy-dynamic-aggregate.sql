@@ -22,7 +22,8 @@ declare
     "medium": "medium",
     "goal": "goal",
     "creative_type": "creative_type",
-    "creative_name": "creative_name"
+    "creative_name": "creative_name",
+    "week": "date_trunc(''week'', ad_date)::date::text"
   }'::jsonb;
   v_metric_map jsonb := '{
     "ad_spend_krw": "COALESCE(SUM(CASE WHEN sheet_name = ''봄툰 KR'' THEN ad_spend_local ELSE COALESCE(NULLIF(ad_spend_krw, 0), ad_spend_local) END), 0)",

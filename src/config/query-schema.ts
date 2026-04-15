@@ -22,6 +22,7 @@ export const DIMENSIONS: DimensionMeta[] = [
   { key: "country", label: "국가", dbColumn: "sheet_name", type: "string" },
   { key: "month", label: "월", dbColumn: "month", type: "string" },
   { key: "date", label: "일자", dbColumn: "ad_date", type: "date" },
+  { key: "week", label: "주간", dbColumn: "date_trunc('week', ad_date)::date", type: "date" },
   { key: "medium", label: "매체", dbColumn: "medium", type: "string" },
   { key: "goal", label: "목표", dbColumn: "goal", type: "string" },
   { key: "creative_type", label: "소재종류", dbColumn: "creative_type", type: "string" },

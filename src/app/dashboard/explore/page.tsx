@@ -225,6 +225,8 @@ export default function ExplorePage() {
             rows={q.result.rows}
             dimensions={q.dimensions}
             metrics={q.metrics}
+            dateRange={q.dateRange}
+            filters={q.filters}
           />
         )}
 
@@ -234,6 +236,8 @@ export default function ExplorePage() {
             rows={q.result.base.rows}
             dimensions={q.dimensions}
             metrics={q.metrics}
+            dateRange={q.dateRange}
+            filters={q.filters}
             isCompare
             compareBase={q.result.base.rows}
             compareRows={q.result.compare.rows}

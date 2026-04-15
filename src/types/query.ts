@@ -12,6 +12,7 @@ export type DimensionKey =
   | "country"
   | "month"
   | "date"
+  | "week"
   | "medium"
   | "goal"
   | "creative_type"

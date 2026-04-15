@@ -28,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { METRIC_MAP } from "@/config/query-schema";
+import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,10 +37,18 @@ import { METRIC_MAP } from "@/config/query-schema";
 
 type QueryResultRow = Record<string, unknown>;
 
+type Granularity = "daily" | "weekly" | "monthly";
+
 interface ExploreChartProps {
+  /** Main query result rows (used when timeDim already in dimensions) */
   rows: QueryResultRow[];
   dimensions: string[];
   metrics: string[];
+  /** Date range from query builder — if set, chart always renders */
+  dateRange?: DateRange | null;
+  /** Filters from query builder — used for self-fetch */
+  filters?: FilterCondition[];
+  /** Compare mode */
   isCompare?: boolean;
   compareBase?: QueryResultRow[];
   compareRows?: QueryResultRow[];
@@ -68,6 +78,20 @@ const COMPARE_COLORS = {
   compare: "hsl(0,70%,55%)",
 };
 
+const GRANULARITY_OPTIONS: { value: Granularity; label: string }[] = [
+  { value: "daily", label: "일별" },
+  { value: "weekly", label: "주간" },
+  { value: "monthly", label: "월별" },
+];
+
+function granularityToDimension(g: Granularity): DimensionKey {
+  switch (g) {
+    case "daily": return "date";
+    case "weekly": return "week";
+    case "monthly": return "month";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Helper: aggregate rows by time period, optionally grouping by a series key
 // ---------------------------------------------------------------------------
@@ -78,7 +102,6 @@ function buildNormalChartData(
   seriesDims: string[],
   metricKey: string,
 ): { data: Record<string, unknown>[]; series: string[] } {
-  // Collect all unique periods and series
   const periodSet = new Set<string>();
   const seriesSet = new Set<string>();
 
@@ -96,7 +119,6 @@ function buildNormalChartData(
   const allSeries = hasSeries ? Array.from(seriesSet) : ["전체"];
   const allPeriods = Array.from(periodSet).sort();
 
-  // Build a lookup: period → seriesLabel → value
   const lookup = new Map<string, Map<string, number>>();
   for (const period of allPeriods) {
     lookup.set(period, new Map());
@@ -116,12 +138,10 @@ function buildNormalChartData(
     const periodMap = lookup.get(period);
     if (!periodMap) continue;
 
-    // Accumulate (sum) in case multiple rows share same period+series
     const existing = periodMap.get(seriesLabel);
     periodMap.set(seriesLabel, (existing ?? 0) + value);
   }
 
-  // Build recharts data array
   const data: Record<string, unknown>[] = allPeriods.map((period) => {
     const point: Record<string, unknown> = { period };
     const periodMap = lookup.get(period);
@@ -143,7 +163,6 @@ function buildCompareChartData(
   baseLabel: string,
   compareLabel: string,
 ): { data: Record<string, unknown>[]; series: string[] } {
-  // Aggregate each set by time
   function aggregate(rows: QueryResultRow[]): Map<string, number> {
     const map = new Map<string, number>();
     for (const row of rows) {
@@ -160,7 +179,6 @@ function buildCompareChartData(
   const baseMap = aggregate(baseRows);
   const compareMap = aggregate(compareRows);
 
-  // 일차 기준 정규화: 각 기간의 시작일로부터 N일차로 변환
   const basePeriods = [...baseMap.keys()].sort();
   const comparePeriods = [...compareMap.keys()].sort();
   const maxLen = Math.max(basePeriods.length, comparePeriods.length);
@@ -169,7 +187,6 @@ function buildCompareChartData(
   for (let i = 0; i < maxLen; i++) {
     const basePeriod = basePeriods[i];
     const comparePeriod = comparePeriods[i];
-    // 라벨: 실제 날짜 표시 (짧은 형태)
     const label = basePeriod
       ? basePeriod.replace(/^\d{4}-/, "")
       : (comparePeriod ? comparePeriod.replace(/^\d{4}-/, "") : `${i + 1}`);
@@ -190,6 +207,8 @@ export function ExploreChart({
   rows,
   dimensions,
   metrics,
+  dateRange,
+  filters,
   isCompare = false,
   compareBase,
   compareRows,
@@ -197,6 +216,11 @@ export function ExploreChart({
   compareLabel = "비교",
 }: ExploreChartProps) {
   const [selectedMetric, setSelectedMetric] = React.useState(metrics[0] ?? "");
+  const [granularity, setGranularity] = React.useState<Granularity>("daily");
+  const [chartRows, setChartRows] = React.useState<QueryResultRow[] | null>(null);
+  const [chartCompareBase, setChartCompareBase] = React.useState<QueryResultRow[] | null>(null);
+  const [chartCompareRows, setChartCompareRows] = React.useState<QueryResultRow[] | null>(null);
+  const [isChartLoading, setIsChartLoading] = React.useState(false);
 
   // Keep selectedMetric in sync when metrics prop changes
   React.useEffect(() => {
@@ -205,21 +229,76 @@ export function ExploreChart({
     }
   }, [metrics, selectedMetric]);
 
-  // Determine time dimension — must exist or we render nothing
-  const timeDim = dimensions.find((d) => d === "date" || d === "month");
+  // Check if main query already has a time dimension
+  const existingTimeDim = dimensions.find((d) => d === "date" || d === "month" || d === "week");
+  const seriesDims = dimensions.filter((d) => d !== "date" && d !== "month" && d !== "week");
 
-  // Other dimensions become series keys
-  const seriesDims = dimensions.filter((d) => d !== "date" && d !== "month");
+  // Determine if self-fetch is needed: dateRange set but no time dimension in main query
+  const needsSelfFetch = !existingTimeDim && !!dateRange;
+
+  // Self-fetch chart data when needed
+  React.useEffect(() => {
+    if (!needsSelfFetch || metrics.length === 0) {
+      setChartRows(null);
+      setChartCompareBase(null);
+      setChartCompareRows(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsChartLoading(true);
+
+    const timeDimKey = granularityToDimension(granularity);
+    const chartDimensions = [timeDimKey, ...seriesDims] as DimensionKey[];
+    const validFilters = (filters ?? []).filter((f) => f.value !== "" && f.value !== undefined);
+
+    const query = {
+      dimensions: chartDimensions,
+      metrics,
+      filters: validFilters,
+      dateRange,
+      sort: { field: timeDimKey, direction: "asc" as const },
+      limit: 5000,
+    };
+
+    fetch("/api/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(query),
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.rows) {
+          setChartRows(data.rows);
+        }
+        // Compare mode results
+        if (data.base?.rows && data.compare?.rows) {
+          setChartCompareBase(data.base.rows);
+          setChartCompareRows(data.compare.rows);
+        }
+      })
+      .catch(() => { /* abort or network error */ })
+      .finally(() => setIsChartLoading(false));
+
+    return () => controller.abort();
+  }, [needsSelfFetch, granularity, metrics, filters, dateRange, seriesDims.join(",")]);
+
+  // Determine effective data source
+  const effectiveTimeDim = needsSelfFetch ? granularityToDimension(granularity) : existingTimeDim;
+  const effectiveRows = needsSelfFetch ? (chartRows ?? []) : rows;
+  const effectiveCompareBase = needsSelfFetch ? (chartCompareBase ?? compareBase) : compareBase;
+  const effectiveCompareRows = needsSelfFetch ? (chartCompareRows ?? compareRows) : compareRows;
 
   // Build chart data
   const { chartData, seriesKeys } = React.useMemo(() => {
-    if (!timeDim || !selectedMetric) return { chartData: [], seriesKeys: [] };
+    if (!effectiveTimeDim || !selectedMetric) return { chartData: [], seriesKeys: [] };
 
-    if (isCompare && compareBase && compareRows) {
+    if (isCompare && effectiveCompareBase && effectiveCompareRows) {
       const { data, series } = buildCompareChartData(
-        compareBase,
-        compareRows,
-        timeDim,
+        effectiveCompareBase,
+        effectiveCompareRows,
+        effectiveTimeDim,
         selectedMetric,
         baseLabel,
         compareLabel,
@@ -228,18 +307,18 @@ export function ExploreChart({
     }
 
     const { data, series } = buildNormalChartData(
-      rows,
-      timeDim,
+      effectiveRows,
+      effectiveTimeDim,
       seriesDims,
       selectedMetric,
     );
     return { chartData: data, seriesKeys: series };
-  }, [timeDim, selectedMetric, isCompare, compareBase, compareRows, rows, seriesDims, baseLabel, compareLabel]);
+  }, [effectiveTimeDim, selectedMetric, isCompare, effectiveCompareBase, effectiveCompareRows, effectiveRows, seriesDims, baseLabel, compareLabel]);
 
   // Build ChartConfig for shadcn chart
   const chartConfig = React.useMemo<ChartConfig>(() => {
     const config: ChartConfig = {};
-    if (isCompare && compareBase && compareRows) {
+    if (isCompare && effectiveCompareBase && effectiveCompareRows) {
       config[baseLabel] = { label: baseLabel, color: COMPARE_COLORS.base };
       config[compareLabel] = { label: compareLabel, color: COMPARE_COLORS.compare };
     } else {
@@ -251,39 +330,83 @@ export function ExploreChart({
       });
     }
     return config;
-  }, [isCompare, compareBase, compareRows, baseLabel, compareLabel, seriesKeys]);
+  }, [isCompare, effectiveCompareBase, effectiveCompareRows, baseLabel, compareLabel, seriesKeys]);
 
   // Metric formatter
   const metricMeta = METRIC_MAP.get(selectedMetric as Parameters<typeof METRIC_MAP.get>[0]);
   const formatValue = metricMeta?.format ?? ((v: number) => v.toLocaleString());
 
-  // Don't render if no time dimension
-  if (!timeDim) return null;
+  // Determine current granularity for toggle highlight (from main query's time dim)
+  const activeGranularity = React.useMemo<Granularity>(() => {
+    if (needsSelfFetch) return granularity;
+    if (existingTimeDim === "date") return "daily";
+    if (existingTimeDim === "week") return "weekly";
+    if (existingTimeDim === "month") return "monthly";
+    return granularity;
+  }, [needsSelfFetch, existingTimeDim, granularity]);
 
-  // Don't render if no data
+  // Don't render if no dateRange and no time dimension
+  if (!effectiveTimeDim && !dateRange) return null;
+
+  // Show loading state
+  if (isChartLoading && chartData.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <span className="text-sm text-muted-foreground">차트 로딩 중...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // No data
   if (chartData.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">추이</CardTitle>
-        {metrics.length > 1 && (
-          <Select value={selectedMetric} onValueChange={(v) => { if (v) setSelectedMetric(v); }}>
-            <SelectTrigger size="sm" className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {metrics.map((m) => {
-                const meta = METRIC_MAP.get(m as Parameters<typeof METRIC_MAP.get>[0]);
-                return (
-                  <SelectItem key={m} value={m}>
-                    {meta?.label ?? m}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Granularity toggle */}
+          <div className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5">
+            {GRANULARITY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setGranularity(opt.value)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                  activeGranularity === opt.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Metric selector */}
+          {metrics.length > 1 && (
+            <Select value={selectedMetric} onValueChange={(v) => { if (v) setSelectedMetric(v); }}>
+              <SelectTrigger size="sm" className="w-[140px]">
+                <span className="truncate">
+                  {METRIC_MAP.get(selectedMetric as Parameters<typeof METRIC_MAP.get>[0])?.label ?? selectedMetric}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {metrics.map((m) => {
+                  const meta = METRIC_MAP.get(m as Parameters<typeof METRIC_MAP.get>[0]);
+                  return (
+                    <SelectItem key={m} value={m}>
+                      {meta?.label ?? m}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -313,7 +436,7 @@ export function ExploreChart({
             />
             {seriesKeys.map((key, i) => {
               const color =
-                isCompare && compareBase && compareRows
+                isCompare && effectiveCompareBase && effectiveCompareRows
                   ? i === 0
                     ? COMPARE_COLORS.base
                     : COMPARE_COLORS.compare
@@ -338,7 +461,7 @@ export function ExploreChart({
           <div className="flex flex-wrap gap-3 pt-2 justify-center">
             {seriesKeys.map((key, i) => {
               const color =
-                isCompare && compareBase && compareRows
+                isCompare && effectiveCompareBase && effectiveCompareRows
                   ? i === 0
                     ? COMPARE_COLORS.base
                     : COMPARE_COLORS.compare
