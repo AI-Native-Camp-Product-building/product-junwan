@@ -14,14 +14,14 @@ export const COUNTRY_FLAGS: Record<string, string> = {
 
 /** Country name → fixed chart color mapping. */
 export const COUNTRY_COLORS: Record<string, string> = {
-  "레진 KR": "hsl(220, 70%, 55%)",   // 파랑
-  "봄툰 KR": "hsl(280, 60%, 55%)",   // 보라
-  US:         "hsl(0, 70%, 55%)",     // 빨강
-  DE:         "hsl(35, 90%, 55%)",    // 주황
-  FR:         "hsl(200, 80%, 50%)",   // 하늘
-  TH:         "hsl(145, 60%, 45%)",   // 초록
-  TW:         "hsl(330, 65%, 55%)",   // 핑크
-  ES:         "hsl(60, 70%, 45%)",    // 올리브
+  "레진 KR": "hsl(0, 72%, 51%)",     // 빨강
+  "봄툰 KR": "hsl(330, 65%, 55%)",   // 핑크
+  US:         "hsl(220, 70%, 55%)",   // 파랑
+  DE:         "hsl(35, 85%, 50%)",    // 주황
+  FR:         "hsl(200, 75%, 48%)",   // 하늘
+  TH:         "hsl(145, 60%, 42%)",   // 초록
+  TW:         "hsl(280, 55%, 55%)",   // 보라
+  ES:         "hsl(48, 80%, 48%)",    // 금색
 };
 
 /** Get fixed color for a country, fallback to index-based. */
