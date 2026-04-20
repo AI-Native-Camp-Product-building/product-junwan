@@ -48,6 +48,12 @@ function parseExploreUrlParams(): Partial<QueryDefinition> | null {
     } catch { /* ignore */ }
   }
 
+  const dateRangeParam = sp.get("dateRange");
+  if (dateRangeParam) {
+    const [start, end] = dateRangeParam.split(":");
+    if (start && end) result.dateRange = { start, end };
+  }
+
   return Object.keys(result).length > 0 ? result : null;
 }
 

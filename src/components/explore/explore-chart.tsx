@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { METRIC_MAP } from "@/config/query-schema";
+import { METRIC_MAP, DIMENSION_MAP } from "@/config/query-schema";
 import { getCountryColor } from "@/lib/constants";
 import type { DateRange, FilterCondition, DimensionKey, MetricKey } from "@/types/query";
 import { cn } from "@/lib/utils";
@@ -141,6 +141,42 @@ function aggregateToWeeks(rows: QueryResultRow[], timeDim: string): QueryResultR
       }
       return result;
     });
+}
+
+// ---------------------------------------------------------------------------
+// Helper: collapse rows by top-N primary dim values, fold rest into "기타"
+// ---------------------------------------------------------------------------
+
+export function collapseToTopN(
+  rows: QueryResultRow[],
+  seriesDim: string,
+  metricKey: string,
+  limit: number,
+): QueryResultRow[] {
+  if (!seriesDim) return rows;
+
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    const key = String(row[seriesDim] ?? "");
+    const v = Number(row[metricKey] ?? 0);
+    if (isNaN(v)) continue;
+    totals.set(key, (totals.get(key) ?? 0) + v);
+  }
+
+  if (totals.size <= limit) return rows;
+
+  const topKeys = new Set(
+    [...totals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([k]) => k),
+  );
+
+  return rows.map((row) => {
+    const key = String(row[seriesDim] ?? "");
+    if (topKeys.has(key)) return row;
+    return { ...row, [seriesDim]: "기타" };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -268,6 +304,7 @@ export function ExploreChart({
 }: ExploreChartProps) {
   const [selectedMetric, setSelectedMetric] = React.useState(metrics[0] ?? "");
   const [granularity, setGranularity] = React.useState<Granularity>("daily");
+  const [primaryDimOverride, setPrimaryDimOverride] = React.useState<string | null>(null);
   const [curveStep, setCurveStep] = React.useState(1);
   const [showCurveSlider, setShowCurveSlider] = React.useState(false);
   const curveType = CURVE_TYPES[curveStep];
@@ -285,8 +322,28 @@ export function ExploreChart({
 
   // Check if main query already has a time dimension
   const existingTimeDim = dimensions.find((d) => d === "date" || d === "month" || d === "week");
-  const seriesDims = dimensions.filter((d) => d !== "date" && d !== "month" && d !== "week");
-  const hasCountryDim = dimensions.includes("country");
+  const nonTimeDims = React.useMemo(
+    () => dimensions.filter((d) => d !== "date" && d !== "month" && d !== "week"),
+    [dimensions],
+  );
+  const effectivePrimaryDim = React.useMemo(() => {
+    if (primaryDimOverride && nonTimeDims.includes(primaryDimOverride)) {
+      return primaryDimOverride;
+    }
+    return nonTimeDims[0] ?? null;
+  }, [primaryDimOverride, nonTimeDims]);
+  const seriesDims = React.useMemo(
+    () => (effectivePrimaryDim ? [effectivePrimaryDim] : []),
+    [effectivePrimaryDim],
+  );
+  const hasCountryDim = effectivePrimaryDim === "country";
+
+  // Reset override when removed from query
+  React.useEffect(() => {
+    if (primaryDimOverride && !nonTimeDims.includes(primaryDimOverride)) {
+      setPrimaryDimOverride(null);
+    }
+  }, [nonTimeDims, primaryDimOverride]);
 
   // Self-fetch needed when:
   // 1. No time dimension in main query but dateRange is set
@@ -385,8 +442,11 @@ export function ExploreChart({
       return { chartData: data, seriesKeys: series };
     }
 
+    const rowsForChart = seriesDims.length > 0
+      ? collapseToTopN(effectiveRows, seriesDims[0], selectedMetric, 10)
+      : effectiveRows;
     const { data, series } = buildNormalChartData(
-      effectiveRows,
+      rowsForChart,
       effectiveTimeDim,
       seriesDims,
       selectedMetric,
@@ -464,6 +524,30 @@ export function ExploreChart({
               </button>
             ))}
           </div>
+
+          {/* Primary dim selector */}
+          {nonTimeDims.length >= 1 && (
+            <Select
+              value={effectivePrimaryDim ?? ""}
+              onValueChange={(v) => setPrimaryDimOverride(v)}
+            >
+              <SelectTrigger size="sm" className="w-auto min-w-[120px]">
+                <span className="truncate">
+                  {DIMENSION_MAP.get(effectivePrimaryDim as Parameters<typeof DIMENSION_MAP.get>[0])?.label ?? effectivePrimaryDim ?? "기준"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {nonTimeDims.map((d) => {
+                  const meta = DIMENSION_MAP.get(d as Parameters<typeof DIMENSION_MAP.get>[0]);
+                  return (
+                    <SelectItem key={d} value={d}>
+                      {meta?.label ?? d}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          )}
 
           {/* Metric selector */}
           {metrics.length > 1 && (

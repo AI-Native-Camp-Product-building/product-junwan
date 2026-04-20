@@ -373,7 +373,7 @@ export function DashboardShell({
   const [isLoading, setIsLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
-  const [chartGranularity, setChartGranularity] = React.useState<ChartGranularity>("monthly");
+  const [chartGranularity, setChartGranularity] = React.useState<ChartGranularity>("daily");
   const effectiveFilters = React.useMemo(
     () => applyLockedFilters(filters, lockedFilters),
     [filters, lockedFilters],
