@@ -17,6 +17,7 @@ import { FilterBar } from "@/components/dashboard/filter-bar";
 import { getDefaultDateRangeForMode } from "@/components/dashboard/date-range-picker-refined";
 import { KpiCardsRefined } from "@/components/dashboard/kpi-cards-refined";
 import { ChartSection } from "@/components/dashboard/chart-section";
+import { LocalePerformanceCards } from "@/components/dashboard/locale-performance-cards";
 import { DashboardDataTable } from "@/components/dashboard/dashboard-data-table";
 import { CreativeRanking } from "@/components/dashboard/creative-ranking";
 import { SpendDonutChart } from "@/components/dashboard/spend-donut-chart";
@@ -540,6 +541,7 @@ export function DashboardShell({
         chartGranularity={chartGranularity}
         onChartGranularityChange={setChartGranularity}
       />
+      <LocalePerformanceCards data={data} isLoading={isLoading} />
       {/* P1 charts — 매체/국가 요약 + 도넛 + 작품 랭킹 */}
       <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 lg:px-6">
         <MediumSummaryTable data={data} isLoading={isLoading} />

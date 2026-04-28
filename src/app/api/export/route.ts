@@ -91,7 +91,7 @@ const CSV_COLUMNS: CSVColumn[] = [
 // ---------------------------------------------------------------------------
 
 function generateFilename(filters: DashboardFilters): string {
-  const parts = ["adinsight"];
+  const parts = ["aminsight"];
 
   if (filters.countries.length > 0 && filters.countries.length <= 3) {
     parts.push(filters.countries.join("_").replace(/\s+/g, ""));

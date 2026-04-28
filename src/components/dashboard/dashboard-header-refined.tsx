@@ -68,7 +68,7 @@ export function DashboardHeaderRefined() {
       <Separator orientation="vertical" className="mr-2 h-4 bg-white/[0.06]" />
       <div className="flex flex-1 flex-wrap items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">
-          AdInsight Dashboard
+          AmInsight Dashboard
         </span>
         <div className="flex flex-wrap items-center gap-1">
           {HEADER_NAV_ITEMS.map((item) => {

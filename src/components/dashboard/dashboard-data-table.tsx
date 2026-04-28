@@ -381,7 +381,7 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
               const visibleRows = table.getFilteredRowModel().rows.map((r) => r.original);
               exportDashboardRowsToCsv(
                 visibleRows,
-                `adinsight-${new Date().toISOString().slice(0, 10)}.csv`,
+                `aminsight-${new Date().toISOString().slice(0, 10)}.csv`,
               );
             }}
             aria-label="CSV 다운로드"

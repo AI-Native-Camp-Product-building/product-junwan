@@ -3,7 +3,7 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AdInsight — 마케팅 성과 대시보드",
+  title: "AmInsight — 마케팅 성과 대시보드",
   description: "10개국 마케팅 성과를 한눈에 확인하세요",
 };
 

@@ -1,5 +1,5 @@
 export const landingContent = {
-  productName: "AdInsight",
+  productName: "AmInsight",
   hero: {
     headline: "+10개국 마케팅 성과를,\n한눈에",
     subheadline: "산발된 광고 데이터를 하나로 모읍니다",

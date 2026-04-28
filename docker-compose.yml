@@ -1,5 +1,6 @@
 services:
-  adinsight:
+  aminsight:
+    container_name: aminsight
     build:
       context: .
       args:
@@ -20,7 +21,7 @@ services:
   sync-cron:
     image: alpine:3.20
     depends_on:
-      - adinsight
+      - aminsight
     env_file:
       - .env.local
     entrypoint: /bin/sh

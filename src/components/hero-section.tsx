@@ -102,7 +102,7 @@ export function HeroSection() {
           </p>
         </div>
 
-        {/* AdInsight logo — appears as fragments fully converge */}
+        {/* Product logo — appears as fragments fully converge */}
         <div
           className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           style={{
@@ -113,7 +113,7 @@ export function HeroSection() {
             className="text-5xl font-bold tracking-tight text-white/95 md:text-6xl"
             style={{ textShadow: "0 0 60px rgba(100,149,237,0.5), 0 0 120px rgba(100,149,237,0.2)" }}
           >
-            AdInsight
+            AmInsight
           </span>
         </div>
 

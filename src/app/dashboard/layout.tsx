@@ -17,7 +17,9 @@ export default function DashboardLayout({
         } as React.CSSProperties
       }
     >
-      <DashboardSidebar />
+      <Suspense>
+        <DashboardSidebar />
+      </Suspense>
       <SidebarInset>
         <Suspense>
           <DashboardHeaderRefined />
