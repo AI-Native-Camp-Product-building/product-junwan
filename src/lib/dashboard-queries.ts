@@ -106,6 +106,62 @@ export interface QueryMeta {
   queriedAt: string;
 }
 
+const DASHBOARD_DATA_CACHE_TTL_MS = 15 * 60 * 1000;
+const DASHBOARD_DATA_CACHE_MAX_ENTRIES = 20;
+const FILTER_OPTIONS_CACHE_TTL_MS = 15 * 60 * 1000;
+
+const dashboardDataCache = new Map<
+  string,
+  { data: { data: AdRow[]; meta: QueryMeta }; timestamp: number }
+>();
+let filterOptionsCache:
+  | { data: FilterOptions; timestamp: number }
+  | null = null;
+
+function getDashboardCacheKey(filters: DashboardFilters): string {
+  return JSON.stringify({
+    countries: [...filters.countries].sort(),
+    months: [...filters.months].sort(),
+    mediums: [...filters.mediums].sort(),
+    goals: [...filters.goals].sort(),
+    startDate: filters.startDate ?? null,
+    endDate: filters.endDate ?? null,
+  });
+}
+
+function getCachedDashboardData(
+  key: string,
+): { data: AdRow[]; meta: QueryMeta } | null {
+  const entry = dashboardDataCache.get(key);
+  if (!entry) return null;
+
+  if (Date.now() - entry.timestamp > DASHBOARD_DATA_CACHE_TTL_MS) {
+    dashboardDataCache.delete(key);
+    return null;
+  }
+
+  dashboardDataCache.delete(key);
+  dashboardDataCache.set(key, entry);
+  return entry.data;
+}
+
+function setCachedDashboardData(
+  key: string,
+  data: { data: AdRow[]; meta: QueryMeta },
+): void {
+  if (dashboardDataCache.has(key)) {
+    dashboardDataCache.delete(key);
+  }
+
+  dashboardDataCache.set(key, { data, timestamp: Date.now() });
+
+  while (dashboardDataCache.size > DASHBOARD_DATA_CACHE_MAX_ENTRIES) {
+    const oldestKey = dashboardDataCache.keys().next().value;
+    if (typeof oldestKey !== "string") break;
+    dashboardDataCache.delete(oldestKey);
+  }
+}
+
 /**
  * Fetch all rows from a Supabase query using pagination.
  * Supabase caps responses at 1000 rows regardless of .limit().
@@ -164,6 +220,10 @@ async function fetchAllRows(
 export async function fetchDashboardData(
   filters: DashboardFilters,
 ): Promise<{ data: AdRow[]; meta: QueryMeta }> {
+  const cacheKey = getDashboardCacheKey(filters);
+  const cached = getCachedDashboardData(cacheKey);
+  if (cached) return cached;
+
   const { rows, error } = await fetchAllRows("ad_normalized", SELECT_COLUMNS, filters);
 
   if (error) {
@@ -185,7 +245,9 @@ export async function fetchDashboardData(
     queriedAt: new Date().toISOString(),
   };
 
-  return { data, meta };
+  const result = { data, meta };
+  setCachedDashboardData(cacheKey, result);
+  return result;
 }
 
 /**
@@ -194,6 +256,13 @@ export async function fetchDashboardData(
  * Filters out "none" values from mediums and goals.
  */
 export async function fetchFilterOptions(): Promise<FilterOptions> {
+  if (
+    filterOptionsCache &&
+    Date.now() - filterOptionsCache.timestamp < FILTER_OPTIONS_CACHE_TTL_MS
+  ) {
+    return filterOptionsCache.data;
+  }
+
   const emptyFilters: DashboardFilters = { countries: [], months: [], mediums: [], goals: [], dateMode: "monthly", dateRange: null };
   const [countriesRes, monthsRes, mediumsRes, goalsRes, creativeTypesRes, creativeNamesRes] = await Promise.all([
     fetchAllRows("ad_normalized", "sheet_name", emptyFilters),
@@ -221,7 +290,7 @@ export async function fetchFilterOptions(): Promise<FilterOptions> {
     return uniqueSorted([...new Set(values)]);
   };
 
-  return {
+  const data = {
     countries: extractDistinct(countriesRes.rows, "sheet_name"),
     months: extractDistinct(monthsRes.rows, "month"),
     mediums: extractDistinct(mediumsRes.rows, "medium", true),
@@ -229,6 +298,25 @@ export async function fetchFilterOptions(): Promise<FilterOptions> {
     creativeTypes: extractDistinct(creativeTypesRes.rows, "creative_type", true),
     creativeNames: extractDistinct(creativeNamesRes.rows, "creative_name", true),
   };
+
+  filterOptionsCache = { data, timestamp: Date.now() };
+  return data;
+}
+
+export async function fetchLatestDataDate(): Promise<string | undefined> {
+  const { data, error } = await supabase
+    .from("ad_normalized")
+    .select("ad_date")
+    .not("ad_date", "is", null)
+    .order("ad_date", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Supabase latest date query error: ${error.message}`);
+  }
+
+  const row = data?.[0] as Record<string, unknown> | undefined;
+  return row?.ad_date ? String(row.ad_date) : undefined;
 }
 
 /**
@@ -272,5 +360,10 @@ export function computeKpiSummary(
     roasChange: change(currentRoas, prevRoas),
     signupsChange: change(currentSignups, prevSignups),
     conversionsChange: change(currentConversions, prevConversions),
+    adSpendDelta: currentAdSpend - prevAdSpend,
+    revenueDelta: currentRevenue - prevRevenue,
+    roasDelta: currentRoas - prevRoas,
+    signupsDelta: currentSignups - prevSignups,
+    conversionsDelta: currentConversions - prevConversions,
   };
 }

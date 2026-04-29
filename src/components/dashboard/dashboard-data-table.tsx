@@ -32,6 +32,7 @@ import { exportDashboardRowsToCsv } from "@/lib/dashboard-export";
 import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 
 import type { AdRow } from "@/types/dashboard";
+import { COUNTRY_FLAGS, getHeatmapBg } from "@/lib/constants";
 import {
   Card,
   CardContent,
@@ -64,18 +65,6 @@ interface DashboardDataTableProps {
 
 const HEATMAP_COLUMNS = ["adSpend", "impressions", "clicks", "ctr", "signups", "signupCpa", "conversions", "revenue", "roas"] as const;
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  "레진 KR": "\u{1F1F0}\u{1F1F7}",
-  "봄툰 KR": "\u{1F1F0}\u{1F1F7}",
-  "KR_레진": "\u{1F1F0}\u{1F1F7}",
-  "KR_봄툰": "\u{1F1F0}\u{1F1F7}",
-  US: "\u{1F1FA}\u{1F1F8}",
-  DE: "\u{1F1E9}\u{1F1EA}",
-  FR: "\u{1F1EB}\u{1F1F7}",
-  TH: "\u{1F1F9}\u{1F1ED}",
-  TW: "\u{1F1F9}\u{1F1FC}",
-  ES: "\u{1F1EA}\u{1F1F8}",
-};
 
 // KEYWORD: dashboard-table-derived-metrics
 function getConversionCpa(row: AdRow): number {
@@ -334,9 +323,8 @@ export function DashboardDataTable({ data, isLoading }: DashboardDataTableProps)
     const num = Number(value);
     if (isNaN(num)) return undefined;
     const { min, max } = minMax[columnId];
-    if (max === min) return undefined;
-    const intensity = (num - min) / (max - min);
-    return { backgroundColor: `hsl(var(--chart-1) / ${(intensity * 0.2).toFixed(3)})` };
+    const bg = getHeatmapBg(num, min, max, 0.2);
+    return bg ? { backgroundColor: bg } : undefined;
   }
 
   if (isLoading) {

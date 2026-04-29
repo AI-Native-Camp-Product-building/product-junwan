@@ -7,7 +7,7 @@ import {
   IconSortDescending,
 } from "@tabler/icons-react";
 import { startOfWeek, format as formatDate } from "date-fns";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Bar,
   Cell,
@@ -21,6 +21,12 @@ import {
 } from "recharts";
 
 import type { AdRow, DashboardFilters, FilterOptions } from "@/types/dashboard";
+import type {
+  LocaleReport,
+  ReportBucket,
+  ReportGroupRow,
+  WeeklyReportRow as ApiWeeklyReportRow,
+} from "@/types/reports";
 import { LOCALES, getDefaultLocale } from "@/lib/locales";
 import { cn } from "@/lib/utils";
 import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
@@ -67,6 +73,8 @@ interface LocaleDetailViewProps {
   initialData: AdRow[];
   filterOptions: FilterOptions;
   initialLocale: string;
+  initialReport: LocaleReport;
+  initialRequestKey: string;
 }
 
 interface Bucket {
@@ -112,13 +120,6 @@ type SortDirection = "asc" | "desc";
 interface SortState {
   key: SortKey;
   direction: SortDirection;
-}
-
-type TitlePeriodMode = "all" | "month" | "week";
-
-interface TitlePeriodOption {
-  value: string;
-  label: string;
 }
 
 const EMPTY_BUCKET: Bucket = {
@@ -194,6 +195,49 @@ function toMetrics(bucket: Bucket) {
   };
 }
 
+function bucketFromReport(bucket: ReportBucket): Bucket {
+  return {
+    adSpend: bucket.adSpend,
+    impressions: bucket.impressions,
+    clicks: bucket.clicks,
+    signups: bucket.signups,
+    conversions: bucket.conversions,
+    revenue: bucket.revenue,
+  };
+}
+
+function groupRowsFromReport(rows: ReportGroupRow[]): GroupRow[] {
+  return rows.map((row) => ({
+    name: row.name,
+    ...bucketFromReport(row),
+    ctr: row.ctr,
+    roas: row.roas,
+    cpa: row.signupCpa,
+  }));
+}
+
+function weeklyRowsFromReport(rows: ApiWeeklyReportRow[]): WeeklyRow[] {
+  return rows.map((row) => ({
+    week: row.week,
+    ...bucketFromReport(row),
+    ctr: row.ctr,
+    roas: row.roas,
+    signupCpa: row.signupCpa,
+  }));
+}
+
+function hasReportData(report: LocaleReport): boolean {
+  const total = report.total;
+  return (
+    total.adSpend > 0 ||
+    total.revenue > 0 ||
+    total.impressions > 0 ||
+    total.clicks > 0 ||
+    total.signups > 0 ||
+    total.conversions > 0
+  );
+}
+
 function parseCommaSeparated(value: string | null, valid?: string[]): string[] {
   if (!value) return [];
   return value
@@ -231,6 +275,13 @@ function buildLocaleUrl(locale: string, filters: DashboardFilters): string {
     params.set("months", filters.months.join(","));
   }
   return `/dashboard/locale?${params.toString()}`;
+}
+
+function replaceBrowserUrl(url: string): void {
+  if (typeof window === "undefined") return;
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  if (currentUrl === url) return;
+  window.history.replaceState(null, "", url);
 }
 
 function aggregateTotal(data: AdRow[]): Bucket {
@@ -313,30 +364,6 @@ function getWeekKey(row: AdRow): string {
     startOfWeek(new Date(baseDate), { weekStartsOn: 1 }),
     "yyyy-MM-dd",
   );
-}
-
-function getTitlePeriodKey(row: AdRow, mode: TitlePeriodMode): string {
-  if (mode === "all") return "all";
-  if (mode === "month") return row.month || row.date.slice(0, 7);
-  return getWeekKey(row);
-}
-
-function getTitlePeriodOptions(
-  data: AdRow[],
-  mode: TitlePeriodMode,
-): TitlePeriodOption[] {
-  if (mode === "all") {
-    return [{ value: "all", label: "현재 선택 기간 전체" }];
-  }
-
-  const values = [...new Set(data.map((row) => getTitlePeriodKey(row, mode)))]
-    .filter(Boolean)
-    .sort((a, b) => b.localeCompare(a));
-
-  return values.map((value) => ({
-    value,
-    label: mode === "month" ? value : `${value} 주차`,
-  }));
 }
 
 function getPayTitleRows(data: AdRow[]): GroupRow[] {
@@ -459,10 +486,12 @@ function DistributionChart({
   title,
   description,
   rows,
+  showSummaryTable = false,
 }: {
   title: string;
   description: string;
   rows: GroupRow[];
+  showSummaryTable?: boolean;
 }) {
   const data = rows.filter((row) => row.adSpend > 0).slice(0, 8);
   return (
@@ -475,43 +504,118 @@ function DistributionChart({
         {data.length === 0 ? (
           <EmptyBlock />
         ) : (
-          <ChartContainer config={{ spend: { label: "광고비", color: "hsl(var(--chart-1))" } }} className="h-[220px] w-full">
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="adSpend"
-                nameKey="name"
-                innerRadius={54}
-                outerRadius={86}
-                paddingAngle={2}
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={SLICE_COLORS[index % SLICE_COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    hideLabel
-                    formatter={(value, name) => (
-                      <div className="flex min-w-40 items-center justify-between gap-3">
-                        <span className="text-muted-foreground">{name}</span>
-                        <span className="font-mono tabular-nums">
-                          {formatKrw(Number(value))}
-                        </span>
-                      </div>
-                    )}
-                  />
-                }
-              />
-            </PieChart>
-          </ChartContainer>
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-4",
+              showSummaryTable ? "xl:grid-cols-[minmax(280px,0.75fr)_minmax(0,1.25fr)]" : "",
+            )}
+          >
+            <ChartContainer
+              config={{ spend: { label: "광고비", color: "hsl(var(--chart-1))" } }}
+              className="h-[240px] w-full"
+            >
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="adSpend"
+                  nameKey="name"
+                  innerRadius={54}
+                  outerRadius={86}
+                  paddingAngle={2}
+                >
+                  {data.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={SLICE_COLORS[index % SLICE_COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      hideLabel
+                      formatter={(value, name) => (
+                        <div className="flex min-w-40 items-center justify-between gap-3">
+                          <span className="text-muted-foreground">{name}</span>
+                          <span className="font-mono tabular-nums">
+                            {formatKrw(Number(value))}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+              </PieChart>
+            </ChartContainer>
+
+            {showSummaryTable ? <GoalSummaryTable rows={data} /> : null}
+          </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function GoalSummaryTable({ rows }: { rows: GroupRow[] }) {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-white/[0.08] bg-white/[0.02]">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>목표</TableHead>
+            <TableHead className="text-right">광고비</TableHead>
+            <TableHead className="text-right">CTR</TableHead>
+            <TableHead className="text-right">가입</TableHead>
+            <TableHead className="text-right">CPA</TableHead>
+            <TableHead className="text-right">매출</TableHead>
+            <TableHead className="text-right">ROAS</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row, index) => (
+            <TableRow key={row.name}>
+              <TableCell className="whitespace-nowrap font-medium">
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{
+                      backgroundColor: SLICE_COLORS[index % SLICE_COLORS.length],
+                    }}
+                  />
+                  {row.name}
+                </span>
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatKrw(row.adSpend)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatPercent(row.ctr)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatNumber(row.signups)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {row.cpa ? formatKrw(row.cpa) : "-"}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatKrw(row.revenue)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums font-medium">
+                <span
+                  className={
+                    row.roas >= 100
+                      ? "text-[hsl(160,60%,45%)]"
+                      : "text-[hsl(0,72%,51%)]"
+                  }
+                >
+                  {formatPercent(row.roas)}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
@@ -757,151 +861,6 @@ function DataTable({
   );
 }
 
-function TitleOverviewSection({ data }: { data: AdRow[] }) {
-  const [periodMode, setPeriodMode] = React.useState<TitlePeriodMode>("all");
-  const periodOptions = React.useMemo(
-    () => getTitlePeriodOptions(data, periodMode),
-    [data, periodMode],
-  );
-  const [period, setPeriod] = React.useState("all");
-
-  React.useEffect(() => {
-    if (periodOptions.length === 0) {
-      setPeriod("all");
-      return;
-    }
-
-    setPeriod((current) =>
-      periodOptions.some((option) => option.value === current)
-        ? current
-        : periodOptions[0].value,
-    );
-  }, [periodOptions]);
-
-  const scopedRows = React.useMemo(() => {
-    if (periodMode === "all") return data;
-    return data.filter((row) => getTitlePeriodKey(row, periodMode) === period);
-  }, [data, period, periodMode]);
-
-  const rankingRows = React.useMemo(
-    () => aggregateByDimension(scopedRows, "creativeName"),
-    [scopedRows],
-  );
-  const topSpend = rankingRows[0];
-  const topRoas = React.useMemo(
-    () =>
-      [...rankingRows]
-        .filter((row) => row.adSpend >= 100000)
-        .sort((a, b) => b.roas - a.roas)[0],
-    [rankingRows],
-  );
-  const topCpa = React.useMemo(
-    () =>
-      [...rankingRows]
-        .filter((row) => row.signups > 0 && row.cpa != null)
-        .sort((a, b) => (a.cpa ?? Number.MAX_SAFE_INTEGER) - (b.cpa ?? Number.MAX_SAFE_INTEGER))[0],
-    [rankingRows],
-  );
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Card className="bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px]">
-        <CardHeader>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <CardTitle>작품 종합 랭킹</CardTitle>
-              <CardDescription>
-                현재 로케일과 필터 기준에서 기간 단위별 작품 성과를 비교합니다.
-              </CardDescription>
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <Select
-                value={periodMode}
-                onValueChange={(value) => {
-                  if (!value) return;
-                  setPeriodMode(value as TitlePeriodMode);
-                }}
-              >
-                <SelectTrigger className="w-full border-white/[0.08] bg-white/[0.03] sm:w-[160px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-white/[0.08] bg-popover/95 backdrop-blur-lg">
-                  <SelectItem value="all">전체</SelectItem>
-                  <SelectItem value="month">월별</SelectItem>
-                  <SelectItem value="week">주차별</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={period}
-                onValueChange={(value) => {
-                  if (!value) return;
-                  setPeriod(value);
-                }}
-                disabled={periodOptions.length <= 1}
-              >
-                <SelectTrigger className="w-full border-white/[0.08] bg-white/[0.03] sm:w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-white/[0.08] bg-popover/95 backdrop-blur-lg">
-                  {periodOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <StatCard
-              label="광고비 1위"
-              value={topSpend ? topSpend.name : "-"}
-              description={topSpend ? formatKrw(topSpend.adSpend) : undefined}
-            />
-            <StatCard
-              label="ROAS 1위"
-              value={topRoas ? topRoas.name : "-"}
-              description={topRoas ? formatPercent(topRoas.roas) : undefined}
-            />
-            <StatCard
-              label="가입 CPA 1위"
-              value={topCpa ? topCpa.name : "-"}
-              description={topCpa?.cpa ? formatKrw(topCpa.cpa) : undefined}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <DataTable
-        title="작품 종합 랭킹"
-        description="기본은 광고비 순이며, 각 컬럼을 클릭해 오름/내림차순으로 바꿀 수 있습니다."
-        rows={rankingRows}
-        maxRows={30}
-      />
-    </div>
-  );
-}
-
-function InsightPlaceholder() {
-  return (
-    <Card className="bg-white/[0.03] border-white/[0.08] backdrop-blur-[12px]">
-      <CardHeader>
-        <CardTitle>시사점</CardTitle>
-        <CardDescription>
-          AI 분석 기반 액션 아이템은 다음 단계에서 연결합니다.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed border-white/[0.08] px-4 text-center text-sm text-muted-foreground">
-          아직 구현되지 않은 영역입니다.
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function WeeklySection({ weekly }: { weekly: WeeklyRow[] }) {
   if (weekly.length === 0) return <EmptyBlock />;
 
@@ -1049,8 +1008,9 @@ export function LocaleDetailView({
   initialData,
   filterOptions,
   initialLocale,
+  initialReport,
+  initialRequestKey,
 }: LocaleDetailViewProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const latestDataDate = React.useMemo(() => {
     const dates = initialData.map((row) => row.date).filter(Boolean).sort();
@@ -1068,15 +1028,9 @@ export function LocaleDetailView({
       countries: [getDefaultLocale(initialLocale)],
     };
   });
-  const [data, setData] = React.useState<AdRow[]>(
-    initialData.filter((row) => row.country === locale),
-  );
+  const [report, setReport] = React.useState<LocaleReport>(initialReport);
   const [isLoading, setIsLoading] = React.useState(false);
-  const dataRef = React.useRef(data);
-
-  React.useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
+  const loadedRequestKeyRef = React.useRef(initialRequestKey);
 
   const effectiveFilters = React.useMemo<DashboardFilters>(
     () => ({ ...filters, countries: [locale] }),
@@ -1094,12 +1048,12 @@ export function LocaleDetailView({
   }, [searchParams]);
 
   React.useEffect(() => {
-    router.replace(buildLocaleUrl(locale, effectiveFilters), { scroll: false });
-  }, [effectiveFilters, locale, router]);
+    replaceBrowserUrl(buildLocaleUrl(locale, effectiveFilters));
+  }, [effectiveFilters, locale]);
 
   React.useEffect(() => {
     const params = new URLSearchParams();
-    params.set("countries", locale);
+    params.set("locale", locale);
     if (effectiveFilters.mediums.length > 0) params.set("mediums", effectiveFilters.mediums.join(","));
     if (effectiveFilters.goals.length > 0) params.set("goals", effectiveFilters.goals.join(","));
     if (effectiveFilters.dateRange) {
@@ -1109,39 +1063,50 @@ export function LocaleDetailView({
       params.set("months", effectiveFilters.months.join(","));
     }
 
+    const requestKey = params.toString();
+    if (loadedRequestKeyRef.current === requestKey) {
+      setIsLoading(false);
+      return;
+    }
+
     const controller = new AbortController();
 
-    setIsLoading(dataRef.current.length === 0);
-    fetch(`/api/dashboard?${params.toString()}`, { signal: controller.signal })
+    setIsLoading(!hasReportData(report));
+    fetch(`/api/reports/locale?${params.toString()}`, { signal: controller.signal })
       .then((res) => res.json())
-      .then((json) => setData(json.data ?? []))
+      .then((json) => {
+        loadedRequestKeyRef.current = requestKey;
+        setReport(json as LocaleReport);
+      })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setData(initialData.filter((row) => row.country === locale));
+        setReport(initialReport);
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsLoading(false);
       });
 
     return () => controller.abort();
-  }, [effectiveFilters, initialData, locale]);
+  }, [effectiveFilters, initialReport, locale, report]);
 
   const adjustedOptions = React.useMemo<FilterOptions>(
     () => ({ ...filterOptions, countries: [locale] }),
     [filterOptions, locale],
   );
 
-  const total = React.useMemo(() => aggregateTotal(data), [data]);
+  const total = React.useMemo(() => bucketFromReport(report.total), [report]);
   const totalMetrics = React.useMemo(() => toMetrics(total), [total]);
-  const goals = React.useMemo(() => aggregateByGoal(data), [data]);
-  const weekly = React.useMemo(() => aggregateWeekly(data), [data]);
-  const allTitles = React.useMemo(() => aggregateByDimension(data, "creativeName"), [data]);
-  const payTitles = React.useMemo(() => getPayTitleRows(data), [data]);
-  const signupTitles = React.useMemo(() => getSignupTitleRows(data), [data]);
-  const creativeTypes = React.useMemo(() => aggregateByDimension(data, "creativeType"), [data]);
-  const creativeTypeMatrix = React.useMemo(() => aggregateMatrix(data, "creativeType"), [data]);
-  const mediums = React.useMemo(() => aggregateByDimension(data, "medium"), [data]);
-  const mediumMatrix = React.useMemo(() => aggregateMatrix(data, "medium"), [data]);
+  const payTotal = React.useMemo(() => bucketFromReport(report.payTotal), [report]);
+  const payMetrics = React.useMemo(() => toMetrics(payTotal), [payTotal]);
+  const goals = React.useMemo(() => groupRowsFromReport(report.goals), [report]);
+  const weekly = React.useMemo(() => weeklyRowsFromReport(report.weekly), [report]);
+  const allTitles = React.useMemo(() => groupRowsFromReport(report.allTitles), [report]);
+  const payTitles = React.useMemo(() => groupRowsFromReport(report.payTitles), [report]);
+  const signupTitles = React.useMemo(() => groupRowsFromReport(report.signupTitles), [report]);
+  const creativeTypes = React.useMemo(() => groupRowsFromReport(report.creativeTypes), [report]);
+  const creativeTypeMatrix = React.useMemo(() => groupRowsFromReport(report.creativeTypeMatrix), [report]);
+  const mediums = React.useMemo(() => groupRowsFromReport(report.mediums), [report]);
+  const mediumMatrix = React.useMemo(() => groupRowsFromReport(report.mediumMatrix), [report]);
   const insights = React.useMemo(
     () => buildInsights(locale, total, goals, allTitles, mediums, creativeTypes),
     [locale, total, goals, allTitles, mediums, creativeTypes],
@@ -1192,13 +1157,13 @@ export function LocaleDetailView({
         hiddenFilters={["countries"]}
       />
 
-      {isLoading && data.length === 0 ? (
+      {isLoading && !hasReportData(report) ? (
         <div className="grid grid-cols-1 gap-4 px-4 md:grid-cols-2 xl:grid-cols-4 lg:px-6">
           {Array.from({ length: 6 }).map((_, index) => (
             <Skeleton key={index} className="h-28 rounded-xl" />
           ))}
         </div>
-      ) : data.length === 0 ? (
+      ) : !hasReportData(report) ? (
         <div className="px-4 lg:px-6">
           <EmptyBlock />
         </div>
@@ -1207,7 +1172,12 @@ export function LocaleDetailView({
           <div className="grid grid-cols-1 gap-4 px-4 md:grid-cols-2 xl:grid-cols-4 lg:px-6">
             <StatCard label="총 광고비" value={formatKrw(total.adSpend)} />
             <StatCard label="결제금액" value={formatKrw(total.revenue)} />
-            <StatCard label="ROAS" value={formatPercent(totalMetrics.roas)} />
+            <StatCard
+              label="결제 캠페인 ROAS"
+              value={
+                payTotal.adSpend > 0 ? formatPercent(payMetrics.roas) : "-"
+              }
+            />
             <StatCard label="회원가입" value={`${formatNumber(total.signups)}건`} />
             <StatCard label="가입 CPA" value={totalMetrics.cpa ? formatKrw(totalMetrics.cpa) : "-"} />
             <StatCard label="CTR" value={formatPercent(totalMetrics.ctr)} />
@@ -1226,23 +1196,19 @@ export function LocaleDetailView({
               title="캠페인 목표별 광고비 분포"
               description="선택 기간의 목표 믹스를 광고비 기준으로 봅니다."
               rows={goals}
+              showSummaryTable
             />
           </div>
 
           <Tabs defaultValue="weekly" className="px-4 lg:px-6">
             <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-white/[0.04]">
               <TabsTrigger value="weekly">주차별</TabsTrigger>
-              <TabsTrigger value="titleOverview">작품 종합</TabsTrigger>
               <TabsTrigger value="titles">작품별</TabsTrigger>
               <TabsTrigger value="creativeTypes">소재별</TabsTrigger>
               <TabsTrigger value="mediums">매체별</TabsTrigger>
-              <TabsTrigger value="insights">시사점</TabsTrigger>
             </TabsList>
             <TabsContent value="weekly">
               <WeeklySection weekly={weekly} />
-            </TabsContent>
-            <TabsContent value="titleOverview">
-              <TitleOverviewSection data={data} />
             </TabsContent>
             <TabsContent value="titles">
               <div className="grid grid-cols-1 gap-4">
@@ -1281,9 +1247,6 @@ export function LocaleDetailView({
                 <DataTable title="매체 요약" rows={mediums} />
                 <DataTable title="매체 × 캠페인 목표 매트릭스" rows={mediumMatrix} />
               </div>
-            </TabsContent>
-            <TabsContent value="insights">
-              <InsightPlaceholder />
             </TabsContent>
           </Tabs>
         </>

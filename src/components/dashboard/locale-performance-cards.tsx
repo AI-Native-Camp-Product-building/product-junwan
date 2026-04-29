@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import type { AdRow } from "@/types/dashboard";
+import type { OverviewLocaleCard } from "@/types/reports";
 import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 import {
   Card,
@@ -18,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface LocalePerformanceCardsProps {
   data: AdRow[];
   isLoading: boolean;
+  reportCards?: OverviewLocaleCard[];
 }
 
 interface MetricBucket {
@@ -154,8 +156,27 @@ function StatRow({
 export function LocalePerformanceCards({
   data,
   isLoading,
+  reportCards,
 }: LocalePerformanceCardsProps) {
-  const locales = React.useMemo(() => computeLocaleCards(data), [data]);
+  const locales = React.useMemo<LocaleCardData[]>(() => {
+    if (reportCards) {
+      return reportCards.map((card) => ({
+        country: card.country,
+        rank: card.rank,
+        adSpend: card.adSpend,
+        impressions: card.impressions,
+        clicks: card.clicks,
+        signups: card.signups,
+        revenue: card.revenue,
+        spendShare: card.spendShare,
+        ctr: card.ctr,
+        payRoas: card.payRoas,
+        signupCpa: card.signupCpa,
+        signupCpaMixed: card.signupCpaMixed,
+      }));
+    }
+    return computeLocaleCards(data);
+  }, [data, reportCards]);
   const searchParams = useSearchParams();
 
   const buildLocaleHref = React.useCallback(

@@ -7,6 +7,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 import type { AdRow } from "@/types/dashboard";
 import { formatKrw, formatNumber, formatPercent } from "@/lib/format";
 import { buildExploreUrl } from "@/lib/explore-link";
+import { getHeatmapBg } from "@/lib/constants";
 import {
   Card,
   CardContent,
@@ -69,11 +70,6 @@ function aggregateByMedium(data: AdRow[]): MediumAgg[] {
     .sort((a, b) => b.adSpend - a.adSpend);
 }
 
-function getHeatmapBg(value: number, min: number, max: number): string {
-  if (max === min) return "";
-  const intensity = (value - min) / (max - min);
-  return `hsl(var(--chart-1) / ${(intensity * 0.25).toFixed(3)})`;
-}
 
 const exploreUrl = buildExploreUrl({
   dimensions: ["medium"],

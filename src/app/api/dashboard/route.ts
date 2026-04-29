@@ -13,20 +13,36 @@ import type { DashboardFilters } from "@/types/dashboard";
 // ---------------------------------------------------------------------------
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 40;
 
-let cache: { key: string; data: unknown; timestamp: number } | null = null;
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 function getCached(key: string): unknown | null {
-  if (!cache || cache.key !== key) return null;
-  if (Date.now() - cache.timestamp > CACHE_TTL_MS) {
-    cache = null;
+  const entry = cache.get(key);
+  if (!entry) return null;
+
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    cache.delete(key);
     return null;
   }
-  return cache.data;
+
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry.data;
 }
 
 function setCache(key: string, data: unknown): void {
-  cache = { key, data, timestamp: Date.now() };
+  if (cache.has(key)) {
+    cache.delete(key);
+  }
+
+  cache.set(key, { data, timestamp: Date.now() });
+
+  while (cache.size > CACHE_MAX_ENTRIES) {
+    const oldestKey = cache.keys().next().value;
+    if (typeof oldestKey !== "string") break;
+    cache.delete(oldestKey);
+  }
 }
 
 // ---------------------------------------------------------------------------

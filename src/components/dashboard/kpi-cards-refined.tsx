@@ -25,8 +25,25 @@ interface KpiCardDefinition {
   label: string;
   getValue: (summary: KpiSummary) => string;
   getChange: (summary: KpiSummary) => number;
+  getDelta: (summary: KpiSummary) => number;
+  formatDelta: (value: number) => string;
   neutralPositive?: boolean;
   isRoas?: boolean;
+}
+
+function formatSignedKrw(value: number): string {
+  if (value === 0) return formatKrw(0);
+  return `${value > 0 ? "+" : "-"}${formatKrw(Math.abs(value))}`;
+}
+
+function formatSignedNumber(value: number): string {
+  if (value === 0) return "0";
+  return `${value > 0 ? "+" : "-"}${formatNumber(Math.abs(value))}`;
+}
+
+function formatSignedPercentPoint(value: number): string {
+  if (value === 0) return "0.0pp";
+  return `${value > 0 ? "+" : "-"}${Math.abs(value).toFixed(1)}pp`;
 }
 
 // KEYWORD: dashboard-kpi-card-layout
@@ -35,27 +52,37 @@ const KPI_CARD_DEFINITIONS: KpiCardDefinition[] = [
     label: "총 광고비",
     getValue: (summary) => formatKrw(summary.adSpend),
     getChange: (summary) => summary.adSpendChange,
+    getDelta: (summary) => summary.adSpendDelta,
+    formatDelta: formatSignedKrw,
     neutralPositive: true,
   },
   {
     label: "총 회원가입",
     getValue: (summary) => formatNumber(summary.signups),
     getChange: (summary) => summary.signupsChange,
+    getDelta: (summary) => summary.signupsDelta,
+    formatDelta: (value) => `${formatSignedNumber(value)}건`,
   },
   {
     label: "총 결제전환",
     getValue: (summary) => formatNumber(summary.conversions),
     getChange: (summary) => summary.conversionsChange,
+    getDelta: (summary) => summary.conversionsDelta,
+    formatDelta: (value) => `${formatSignedNumber(value)}건`,
   },
   {
     label: "총 결제금액",
     getValue: (summary) => formatKrw(summary.revenue),
     getChange: (summary) => summary.revenueChange,
+    getDelta: (summary) => summary.revenueDelta,
+    formatDelta: formatSignedKrw,
   },
   {
     label: "평균 ROAS",
     getValue: (summary) => formatPercent(summary.roas),
     getChange: (summary) => summary.roasChange,
+    getDelta: (summary) => summary.roasDelta,
+    formatDelta: formatSignedPercentPoint,
     isRoas: true,
   },
 ];
@@ -155,7 +182,7 @@ export function KpiCardsRefined({
             </CardAction>
           </CardHeader>
           <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="line-clamp-1 flex gap-2 font-medium">
+            <div className="line-clamp-1 flex w-full items-center gap-2 font-medium">
               {isLoading ? (
                 <Skeleton className="h-4 w-40" />
               ) : (
@@ -166,6 +193,9 @@ export function KpiCardsRefined({
                   ) : (
                     <IconTrendingDown className="size-4 text-[hsl(0,72%,51%)]" />
                   )}
+                  <span className="ml-auto truncate text-right text-xs font-semibold tabular-nums text-foreground/35">
+                    {definition.formatDelta(definition.getDelta(summary))}
+                  </span>
                 </>
               )}
             </div>

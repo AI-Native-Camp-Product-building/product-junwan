@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { startOfWeek, format as fnsFormat } from "date-fns";
@@ -12,6 +12,7 @@ import type {
   DateMode,
   DateRange,
 } from "@/types/dashboard";
+import type { OverviewReport, ReportGroupRow } from "@/types/reports";
 import { IconLink } from "@tabler/icons-react";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { getDefaultDateRangeForMode } from "@/components/dashboard/date-range-picker-refined";
@@ -25,10 +26,13 @@ import { MediumSummaryTable } from "@/components/dashboard/medium-summary-table"
 import { CountrySummaryTable } from "@/components/dashboard/country-summary-table";
 import { InsightsPanel } from "@/components/dashboard/insights-panel";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DashboardShellProps {
   initialData: AdRow[];
   filterOptions: FilterOptions;
+  initialReport?: OverviewReport;
+  latestDataDate?: string;
   /** Optional initial filter overrides (e.g. pre-selecting a country or medium). */
   initialFilters?: Partial<DashboardFilters>;
   hiddenFilters?: Array<"countries" | "mediums" | "goals">;
@@ -73,7 +77,7 @@ function useDebounce<T>(value: T, delay: number): T {
 /** Split data into current/previous periods based on dateMode.
  *  - weekly: rows split by week boundary (last 7 days vs prior 7 days)
  *  - monthly: group by month, compare last 2 months
- *  - daily/custom: split dateRange in half, compare 2nd half vs 1st half (전 동기간)
+ *  - daily/custom: split dateRange in half, compare 2nd half vs 1st half (???숆린媛?
  */
 function splitByPeriod(
   data: AdRow[],
@@ -98,13 +102,13 @@ function splitByPeriod(
   }
 
   if (dateMode === "weekly") {
-    // 날짜 기준: 최근 7일 vs 그 전 7일
+    // ?좎쭨 湲곗?: 理쒓렐 7??vs 洹???7??
     const withDate = data.filter((r) => r.date);
     if (withDate.length === 0) return { curr: data, prev: [] };
     const dates = withDate.map((r) => r.date).sort();
     const latest = new Date(dates[dates.length - 1]);
     const weekAgo = new Date(latest);
-    weekAgo.setDate(weekAgo.getDate() - 6); // 7일 포함
+    weekAgo.setDate(weekAgo.getDate() - 6); // 7???ы븿
     const twoWeeksAgo = new Date(weekAgo);
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7);
 
@@ -117,7 +121,7 @@ function splitByPeriod(
     };
   }
 
-  // daily/custom: dateRange 기반 전 동기간
+  // daily/custom: dateRange 湲곕컲 ???숆린媛?
   if (dateRange) {
     const start = new Date(dateRange.startDate);
     const end = new Date(dateRange.endDate);
@@ -139,7 +143,7 @@ function splitByPeriod(
     };
   }
 
-  // fallback: 월 기준
+  // fallback: ??湲곗?
   return splitByPeriod(data, "monthly", null);
 }
 
@@ -157,6 +161,11 @@ function computeKpiSummary(data: AdRow[], dateMode: DateMode = "monthly", dateRa
   let roasChange = 0;
   let signupsChange = 0;
   let conversionsChange = 0;
+  let adSpendDelta = 0;
+  let revenueDelta = 0;
+  let roasDelta = 0;
+  let signupsDelta = 0;
+  let conversionsDelta = 0;
 
   if (prev.length > 0) {
     const currAdSpend = curr.reduce((s, r) => s + r.adSpend, 0);
@@ -175,6 +184,11 @@ function computeKpiSummary(data: AdRow[], dateMode: DateMode = "monthly", dateRa
     signupsChange = prevSignups > 0 ? ((currSignups - prevSignups) / prevSignups) * 100 : 0;
     conversionsChange = prevConversions > 0 ? ((currConversions - prevConversions) / prevConversions) * 100 : 0;
     roasChange = currRoas - prevRoas;
+    adSpendDelta = currAdSpend - prevAdSpend;
+    revenueDelta = currRevenue - prevRevenue;
+    signupsDelta = currSignups - prevSignups;
+    conversionsDelta = currConversions - prevConversions;
+    roasDelta = currRoas - prevRoas;
   }
 
   return {
@@ -188,6 +202,11 @@ function computeKpiSummary(data: AdRow[], dateMode: DateMode = "monthly", dateRa
     roasChange,
     signupsChange,
     conversionsChange,
+    adSpendDelta,
+    revenueDelta,
+    roasDelta,
+    signupsDelta,
+    conversionsDelta,
   };
 }
 
@@ -241,7 +260,7 @@ function computeTrendData(
       totalSignups += agg.signups;
       if (agg.hasData) totalHasData = true;
 
-      // 미입력(모든 지표 0) → skip = undefined = Recharts 갭
+      // 誘몄엯??紐⑤뱺 吏??0) ??skip = undefined = Recharts 媛?
       if (!agg.hasData) continue;
 
       if (metric === "adSpend") point[country] = Math.round(agg.adSpend);
@@ -284,11 +303,66 @@ function computeMediumSpend(data: AdRow[]): MediumSpendPoint[] {
     .sort((a, b) => b.adSpend - a.adSpend);
 }
 
-/** Default filter state — used for SSR and as initial client state. */
+/** Default filter state ??used for SSR and as initial client state. */
 const DEFAULT_FILTERS: DashboardFilters = {
   countries: [], months: [], mediums: [], goals: [],
   dateMode: "monthly", dateRange: null,
 };
+
+function emptyAdRow(overrides: Partial<AdRow>): AdRow {
+  return {
+    id: `${overrides.country ?? "all"}-${overrides.medium ?? "all"}-${overrides.creativeName ?? "all"}-${overrides.date ?? ""}`,
+    country: "",
+    month: "",
+    date: "",
+    medium: "",
+    goal: "",
+    creativeType: "",
+    creativeName: "",
+    adSpend: 0,
+    adSpendLocal: 0,
+    currency: "KRW",
+    impressions: 0,
+    clicks: 0,
+    ctr: 0,
+    signups: 0,
+    signupCpa: 0,
+    conversions: 0,
+    revenue: 0,
+    roas: 0,
+    ...overrides,
+  };
+}
+
+function groupRowToAdRow(row: ReportGroupRow, overrides: Partial<AdRow>): AdRow {
+  return emptyAdRow({
+    adSpend: row.adSpend,
+    adSpendLocal: row.adSpend,
+    impressions: row.impressions,
+    clicks: row.clicks,
+    ctr: row.ctr,
+    signups: row.signups,
+    signupCpa: row.signupCpa ?? 0,
+    conversions: row.conversions,
+    revenue: row.revenue,
+    roas: row.roas,
+    ...overrides,
+  });
+}
+
+function buildReportParams(filters: DashboardFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.countries.length > 0) params.set("countries", filters.countries.join(","));
+  if (filters.mediums.length > 0) params.set("mediums", filters.mediums.join(","));
+  if (filters.goals.length > 0) params.set("goals", filters.goals.join(","));
+  if (filters.dateRange) {
+    params.set("startDate", filters.dateRange.startDate);
+    params.set("endDate", filters.dateRange.endDate);
+  } else if (filters.months.length > 0) {
+    params.set("months", filters.months.join(","));
+  }
+  return params;
+}
 
 /** Read filters from URL search params. Client-only (returns null on server). */
 function readFiltersFromUrl(options: FilterOptions): DashboardFilters | null {
@@ -338,12 +412,14 @@ function syncFiltersToUrl(filters: DashboardFilters) {
 export function DashboardShell({
   initialData,
   filterOptions,
+  initialReport,
+  latestDataDate: providedLatestDataDate,
   initialFilters,
   hiddenFilters,
   lockedFilters,
 }: DashboardShellProps) {
   // KEYWORD: dashboard-latest-data-date
-  const latestDataDate = React.useMemo(() => {
+  const latestDataDateFromRows = React.useMemo(() => {
     const validDates = initialData
       .map((row) => row.date)
       .filter((date): date is string => Boolean(date))
@@ -351,6 +427,7 @@ export function DashboardShell({
 
     return validDates[validDates.length - 1];
   }, [initialData]);
+  const latestDataDate = providedLatestDataDate ?? latestDataDateFromRows;
 
   const [filters, setFilters] = React.useState<DashboardFilters>(() => {
     const baseFilters: DashboardFilters = {
@@ -370,8 +447,13 @@ export function DashboardShell({
 
     return baseFilters;
   });
-  const [data, setData] = React.useState<AdRow[]>(initialData);
+  const [report, setReport] = React.useState<OverviewReport | null>(
+    initialReport ?? null,
+  );
+  const [rawData, setRawData] = React.useState<AdRow[]>(initialData);
+  const [rawDataLoaded, setRawDataLoaded] = React.useState(initialData.length > 0);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isRawLoading, setIsRawLoading] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
   const [chartGranularity, setChartGranularity] = React.useState<ChartGranularity>("daily");
@@ -416,70 +498,105 @@ export function DashboardShell({
   }, [effectiveFilters, hydrated]);
 
   const debouncedFilters = useDebounce(effectiveFilters, 300);
+  const loadedReportRequestKeyRef = React.useRef(
+    initialReport ? buildReportParams(effectiveFilters).toString() : "",
+  );
 
-  // Fetch data when filters change (or on initial load)
+  // Fetch aggregated overview data when filters change.
   React.useEffect(() => {
-    setIsLoading(true);
-    const params = new URLSearchParams();
-    if (debouncedFilters.countries.length > 0) params.set("countries", debouncedFilters.countries.join(","));
-    if (debouncedFilters.mediums.length > 0) params.set("mediums", debouncedFilters.mediums.join(","));
-    if (debouncedFilters.goals.length > 0) params.set("goals", debouncedFilters.goals.join(","));
-
-    // Use dateRange for API if available, otherwise fall back to months
-    // Extend range to include comparison period data
-    if (debouncedFilters.dateRange) {
-      const start = new Date(debouncedFilters.dateRange.startDate);
-      const end = new Date(debouncedFilters.dateRange.endDate);
-      const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const mode = debouncedFilters.dateMode;
-      const extraDays = mode === "weekly" ? 14 : days; // 전주 or 전 동기간
-      const extendedStart = new Date(start);
-      extendedStart.setDate(extendedStart.getDate() - extraDays);
-      params.set("startDate", extendedStart.toISOString().slice(0, 10));
-      params.set("endDate", debouncedFilters.dateRange.endDate);
-    } else if (debouncedFilters.months.length > 0) {
-      params.set("months", debouncedFilters.months.join(","));
+    if (!initialReport) return;
+    const params = buildReportParams(debouncedFilters);
+    const requestKey = params.toString();
+    if (loadedReportRequestKeyRef.current === requestKey) {
+      setIsLoading(false);
+      return;
     }
 
-    fetch(`/api/dashboard?${params.toString()}`)
-      .then((res) => res.json())
-      .then((json) => setData(json.data ?? []))
-      .catch(() => setData(initialData))
-      .finally(() => setIsLoading(false));
-  }, [debouncedFilters, initialData]);
+    setIsLoading(true);
+    setRawData([]);
+    setRawDataLoaded(false);
 
-  const kpiSummary = React.useMemo(() => computeKpiSummary(data, filters.dateMode, filters.dateRange), [data, filters.dateMode, filters.dateRange]);
-  const mediumSpendData = React.useMemo(() => computeMediumSpend(data), [data]);
+    fetch(`/api/reports/overview?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        loadedReportRequestKeyRef.current = requestKey;
+        setReport(json as OverviewReport);
+      })
+      .finally(() => setIsLoading(false));
+  }, [debouncedFilters, initialReport]);
+
+  const overviewRows = React.useMemo<AdRow[]>(() => {
+    if (!report) return rawData;
+    return [
+      ...report.countrySummary.map((row) =>
+        groupRowToAdRow(row, { country: row.name }),
+      ),
+      ...report.mediumSummary.map((row) =>
+        groupRowToAdRow(row, { medium: row.name }),
+      ),
+      ...report.creativeRanking.map((row) =>
+        groupRowToAdRow(row, { creativeName: row.name }),
+      ),
+    ];
+  }, [rawData, report]);
+
+  const kpiSummary = React.useMemo(
+    () => report?.kpiSummary ?? computeKpiSummary(rawData, filters.dateMode, filters.dateRange),
+    [filters.dateMode, filters.dateRange, rawData, report],
+  );
+  const mediumSpendData = React.useMemo(() => {
+    if (report) {
+      return report.mediumSpend.map((row) => ({
+        medium: row.name,
+        adSpend: row.adSpend,
+        revenue: row.revenue,
+        roas: row.roas,
+      }));
+    }
+    return computeMediumSpend(rawData);
+  }, [rawData, report]);
 
   const trendData = React.useMemo(() => ({
-    adSpend: computeTrendData(data, "adSpend", chartGranularity),
-    signups: computeTrendData(data, "signups", chartGranularity),
-    revenue: computeTrendData(data, "revenue", chartGranularity),
-    roas: computeTrendData(data, "roas", chartGranularity),
-    signupCpa: computeTrendData(data, "signupCpa", chartGranularity),
-  }), [data, chartGranularity]);
+    adSpend: report?.trend.adSpend ?? computeTrendData(rawData, "adSpend", chartGranularity),
+    signups: report?.trend.signups ?? computeTrendData(rawData, "signups", chartGranularity),
+    revenue: report?.trend.revenue ?? computeTrendData(rawData, "revenue", chartGranularity),
+    roas: report?.trend.roas ?? computeTrendData(rawData, "roas", chartGranularity),
+    signupCpa: report?.trend.signupCpa ?? computeTrendData(rawData, "signupCpa", chartGranularity),
+  }), [rawData, chartGranularity, report]);
 
   // KEYWORD: dashboard-insight-period-split
   // Split data into current/previous periods for insights.
-  const sortedMonths = [...new Set(data.map((r) => r.month))].sort();
+  const sortedMonths = [...new Set(rawData.map((r) => r.month))].sort();
   const mid = Math.ceil(sortedMonths.length / 2);
   const currentMonths = new Set(sortedMonths.slice(mid));
   const previousMonths = new Set(sortedMonths.slice(0, mid));
   const currentPeriodData =
     sortedMonths.length < 2
-      ? data
-      : data.filter((row) => currentMonths.has(row.month));
+      ? rawData
+      : rawData.filter((row) => currentMonths.has(row.month));
   const previousPeriodData =
     sortedMonths.length < 2
       ? ([] as AdRow[])
-      : data.filter((row) => previousMonths.has(row.month));
+      : rawData.filter((row) => previousMonths.has(row.month));
 
   const activeCountries = React.useMemo(() => {
-    const set = new Set(data.map((r) => r.country));
+    if (report) return report.localeCards.map((card) => card.country).sort();
+    const set = new Set(rawData.map((r) => r.country));
     return [...set].sort();
-  }, [data]);
+  }, [rawData, report]);
 
-  // Compute the latest date present in data — used as reference for date picker mode switching
+  const handleLoadRawData = React.useCallback(() => {
+    setIsRawLoading(true);
+    const params = buildReportParams(effectiveFilters);
+    fetch(`/api/dashboard?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        setRawData(json.data ?? []);
+        setRawDataLoaded(true);
+      })
+      .finally(() => setIsRawLoading(false));
+  }, [effectiveFilters]);
+
   const handleCopyLink = React.useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -516,10 +633,10 @@ export function DashboardShell({
             size="sm"
             onClick={handleCopyLink}
             className="shrink-0 gap-1.5 bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06]"
-            aria-label="현재 필터 링크 복사"
+            aria-label="?꾩옱 ?꾪꽣 留곹겕 蹂듭궗"
           >
             <IconLink className="size-3.5" />
-            {linkCopied ? "복사됨!" : "링크 복사"}
+            {linkCopied ? "蹂듭궗??" : "留곹겕 蹂듭궗"}
           </Button>
         </div>
       </div>
@@ -528,9 +645,11 @@ export function DashboardShell({
         summary={kpiSummary}
         isLoading={isLoading}
         changeLabel={
-          filters.dateMode === "weekly" ? "전주 대비"
-            : filters.dateMode === "monthly" ? "전월 대비"
-            : "전 동기간 대비"
+          filters.dateMode === "weekly"
+            ? "전주 대비"
+            : filters.dateMode === "monthly"
+              ? "전월 대비"
+              : "동기간 대비"
         }
       />
       <ChartSection
@@ -541,27 +660,84 @@ export function DashboardShell({
         chartGranularity={chartGranularity}
         onChartGranularityChange={setChartGranularity}
       />
-      <LocalePerformanceCards data={data} isLoading={isLoading} />
-      {/* P1 charts — 매체/국가 요약 + 도넛 + 작품 랭킹 */}
+      <LocalePerformanceCards
+        data={overviewRows}
+        isLoading={isLoading}
+        reportCards={report?.localeCards}
+      />
+      {/* P1 charts ??留ㅼ껜/援?? ?붿빟 + ?꾨꽋 + ?묓뭹 ??궧 */}
       <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 lg:px-6">
-        <MediumSummaryTable data={data} isLoading={isLoading} />
-        <CountrySummaryTable data={data} isLoading={isLoading} />
+        <MediumSummaryTable
+          data={
+            report
+              ? report.mediumSummary.map((row) =>
+                  groupRowToAdRow(row, { medium: row.name }),
+                )
+              : rawData
+          }
+          isLoading={isLoading}
+        />
+        <CountrySummaryTable
+          data={
+            report
+              ? report.countrySummary.map((row) =>
+                  groupRowToAdRow(row, { country: row.name }),
+                )
+              : rawData
+          }
+          isLoading={isLoading}
+        />
       </div>
       <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-7 lg:px-6">
         <div className="lg:col-span-4">
-          <CreativeRanking data={data} isLoading={isLoading} />
+          <CreativeRanking
+            data={
+              report
+                ? report.creativeRanking.map((row) =>
+                    groupRowToAdRow(row, { creativeName: row.name }),
+                  )
+                : rawData
+            }
+            isLoading={isLoading}
+          />
         </div>
         <div className="lg:col-span-3">
-          <SpendDonutChart data={data} isLoading={isLoading} />
+          <SpendDonutChart data={overviewRows} isLoading={isLoading} />
         </div>
       </div>
 
-      <DashboardDataTable data={data} isLoading={isLoading} />
-      <InsightsPanel
-        currentData={currentPeriodData}
-        previousData={previousPeriodData}
-        isLoading={isLoading}
-      />
+      {rawDataLoaded ? (
+        <>
+          <DashboardDataTable data={rawData} isLoading={isRawLoading} />
+          <InsightsPanel
+            currentData={currentPeriodData}
+            previousData={previousPeriodData}
+            isLoading={isRawLoading}
+          />
+        </>
+      ) : (
+        <div className="px-4 lg:px-6">
+          <Card className="border-white/[0.08] bg-white/[0.03] backdrop-blur-[12px]">
+            <CardHeader>
+              <CardTitle>상세 RAW 데이터</CardTitle>
+              <CardDescription>
+                첫 화면 속도를 위해 원본 row 테이블은 필요할 때만 불러옵니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoadRawData}
+                disabled={isRawLoading}
+                className="bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06]"
+              >
+                {isRawLoading ? "불러오는 중..." : "상세 데이터 불러오기"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

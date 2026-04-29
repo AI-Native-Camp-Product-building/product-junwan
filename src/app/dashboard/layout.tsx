@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { DashboardHeaderRefined } from "@/components/dashboard/dashboard-header-refined";
+import { DashboardSidebarHandle } from "@/components/dashboard/dashboard-sidebar-handle";
 
 export default function DashboardLayout({
   children,
@@ -20,10 +20,8 @@ export default function DashboardLayout({
       <Suspense>
         <DashboardSidebar />
       </Suspense>
+      <DashboardSidebarHandle />
       <SidebarInset>
-        <Suspense>
-          <DashboardHeaderRefined />
-        </Suspense>
         {children}
       </SidebarInset>
     </SidebarProvider>

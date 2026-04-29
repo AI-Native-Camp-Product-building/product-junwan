@@ -65,6 +65,11 @@ export interface KpiSummary {
   roasChange: number;
   signupsChange: number;
   conversionsChange: number;
+  adSpendDelta: number;
+  revenueDelta: number;
+  roasDelta: number;
+  signupsDelta: number;
+  conversionsDelta: number;
 }
 
 /**

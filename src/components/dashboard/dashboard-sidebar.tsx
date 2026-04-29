@@ -6,10 +6,13 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   IconChevronDown,
+  IconChevronLeft,
+  IconBulb,
   IconHome,
   IconLogout,
   IconMessageCircle,
   IconSearch,
+  IconTrophy,
   IconWorld,
 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
@@ -28,6 +31,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { SyncStatus } from "@/components/dashboard/sync-status";
 
@@ -36,11 +40,16 @@ export function DashboardSidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { toggleSidebar } = useSidebar();
   const { data: session } = useSession();
   const [localeOpen, setLocaleOpen] = React.useState(true);
 
   const activeLocale = searchParams.get("locale");
   const isLocalePage = pathname.startsWith("/dashboard/locale");
+  const isLocaleSectionPage =
+    isLocalePage ||
+    pathname.startsWith("/dashboard/titles") ||
+    pathname.startsWith("/dashboard/insights");
   const feedbackTitle = isAdmin(session?.user?.email)
     ? "피드백 관리"
     : "피드백";
@@ -49,6 +58,10 @@ export function DashboardSidebar({
     { title: "홈", href: "/dashboard", icon: IconHome },
     { title: "탐색", href: "/dashboard/explore", icon: IconSearch },
   ];
+
+  React.useEffect(() => {
+    if (isLocaleSectionPage) setLocaleOpen(true);
+  }, [isLocaleSectionPage]);
 
   const buildLocaleHref = React.useCallback(
     (locale: string) => {
@@ -61,6 +74,16 @@ export function DashboardSidebar({
     [searchParams],
   );
 
+  const buildAnalysisHref = React.useCallback(
+    (href: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("locale");
+      params.delete("platform");
+      return `${href}${params.size > 0 ? `?${params.toString()}` : ""}`;
+    },
+    [searchParams],
+  );
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -68,24 +91,31 @@ export function DashboardSidebar({
       {...props}
     >
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="/dashboard" />}
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
-              <span
-                className="text-base font-semibold tracking-tight"
-                style={{
-                  color: "rgba(100, 149, 237, 0.9)",
-                  textShadow: "0 0 20px rgba(100, 149, 237, 0.3)",
-                }}
+        <div className="flex items-center gap-2 px-2 py-1">
+          <SidebarMenu className="min-w-0 flex-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/dashboard" />}
+                className="data-[slot=sidebar-menu-button]:p-1.5!"
               >
-                AmInsight
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+                <span
+                  className="text-base font-semibold tracking-tight text-white/90"
+                  style={{ textShadow: "0 0 18px rgba(255,255,255,0.18)" }}
+                >
+                  AmInsight
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+            aria-label="사이드바 접기"
+          >
+            <IconChevronLeft className="size-4" />
+          </button>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -119,17 +149,17 @@ export function DashboardSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<button type="button" />}
-              isActive={isLocalePage}
+              isActive={isLocaleSectionPage}
               onClick={() => setLocaleOpen((open) => !open)}
               className={cn(
                 "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isLocalePage
+                isLocaleSectionPage
                   ? "bg-white/[0.04] text-white/90"
                   : "text-white/50 hover:bg-white/[0.04] hover:text-white/70",
               )}
               aria-expanded={localeOpen}
             >
-              {isLocalePage && <ActiveRail />}
+              {isLocaleSectionPage && <ActiveRail />}
               <IconWorld className="size-4 shrink-0" />
               <span>로케일</span>
               <IconChevronDown
@@ -162,6 +192,39 @@ export function DashboardSidebar({
                     </SidebarMenuSubItem>
                   );
                 })}
+                <SidebarMenuSubItem>
+                  <div className="my-1 h-px bg-white/[0.08]" />
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton
+                    render={<Link href={buildAnalysisHref("/dashboard/titles")} />}
+                    isActive={pathname.startsWith("/dashboard/titles")}
+                    className={cn(
+                      "h-8 rounded-md px-2 text-xs font-medium transition-colors",
+                      pathname.startsWith("/dashboard/titles")
+                        ? "bg-white/[0.05] text-white/90"
+                        : "text-white/45 hover:bg-white/[0.04] hover:text-white/70",
+                    )}
+                  >
+                    <IconTrophy className="size-3.5 shrink-0" />
+                    <span>작품 종합</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton
+                    render={<Link href={buildAnalysisHref("/dashboard/insights")} />}
+                    isActive={pathname.startsWith("/dashboard/insights")}
+                    className={cn(
+                      "h-8 rounded-md px-2 text-xs font-medium transition-colors",
+                      pathname.startsWith("/dashboard/insights")
+                        ? "bg-white/[0.05] text-white/90"
+                        : "text-white/45 hover:bg-white/[0.04] hover:text-white/70",
+                    )}
+                  >
+                    <IconBulb className="size-3.5 shrink-0" />
+                    <span>시사점</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
               </SidebarMenuSub>
             )}
           </SidebarMenuItem>
